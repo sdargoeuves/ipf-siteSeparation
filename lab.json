@@ -1,0 +1,22 @@
+[
+  {
+    "hostname":"device1",
+    "location":"location1"
+  },
+  {
+    "hostname":"device2",
+    "location":"location1"
+  },
+  {
+    "hostname":"device3",
+    "location":"location2"
+  },
+  {
+    "hostname":"device4",
+    "location":"location1"
+  },
+  {
+    "hostname":"device5",
+    "location":"location3"
+  }
+]
