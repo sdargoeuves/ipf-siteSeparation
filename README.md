@@ -22,5 +22,6 @@ python3 siteSeparation.py -f a_file.xlsx
   -e, --exact_match     by default the regex and hostname will be capitalised in the regex. Use this option to keep the case from CSV/SNow
   -grex, --grex         instead of using list of hostname, we use GREX to find the regex matching that same list
 
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
