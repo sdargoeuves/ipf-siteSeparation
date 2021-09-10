@@ -7,9 +7,11 @@ contains the IP Fabric API client. this is available here: (https://github.com/c
 ## How to use
 
 ***to use ServiceNow:***
+
 python3 siteSeparation.py -sn
 
 ***to use a file***
+
 python3 siteSeparation.py -f a_file.xlsx
 
 ## Help
