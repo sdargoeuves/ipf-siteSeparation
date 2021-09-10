@@ -34,7 +34,7 @@ There is an option to generate *regex* based on the hostnames, instead of just u
 > `GREX` is required for this option to work
 > To install, you can follow these [instructions][grex_install]
 
-[Find more information about GREX] [grex_github]
+[Find more information about GREX][grex_github]
 
 
 ## Help
