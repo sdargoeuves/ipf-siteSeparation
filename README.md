@@ -47,7 +47,7 @@ use to only generate a new host/site JSON file from SNow. This won't update IP F
   - -e, --exact_match
 
 by default the regex and hostname will be capitalised in the regex. Use this option to keep the case from CSV/SNow
-  -grex, --grex
+  - -grex, --grex
 
 instead of using list of hostname, we use GREX to find the regex matching that same list
 
