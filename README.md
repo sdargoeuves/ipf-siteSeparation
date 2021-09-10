@@ -30,8 +30,12 @@ Find the required library in order for this script to work
 
 ## GREX
 
-To use *regex* instead of hostname inside the rules which will be generated, this script is using the tool [GREX][grex_github]
-For this option to work, you need to have grex installed. You can follow the instruction [here][grex_install]
+There is an option to generate *regex* based on the hostnames, instead of just using hostname in the rules for the site separation.
+> `GREX` is required for this option to work
+> To install, you can follow these [instructions][grex_install]
+
+[Find more information about GREX] [grex_github]
+
 
 ## Help
 
@@ -47,10 +51,9 @@ use to only generate a new host/site JSON file from SNow. This won't update IP F
   - -e, --exact_match
 
 by default the regex and hostname will be capitalised in the regex. Use this option to keep the case from CSV/SNow
-  - -grex, --grex
-
-instead of using list of hostname, we use GREX to find the regex matching that same list
-
+    - -grex, --grex
+  
+instead of using list of hostname, we use GREX to generate the regex
 
 ## License
 
