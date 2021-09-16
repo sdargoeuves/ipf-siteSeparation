@@ -1,9 +1,6 @@
 # import
-import os
 import sys
-import subprocess
 import json
-import httpx
 import argparse
 import pandas as pd
 from datetime import datetime
@@ -12,16 +9,15 @@ from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
+from modules.fetchSnow import fetchSNowDevicesLoc
+from modules.regexOptimizer import regexOptimisation
+from modules.input import readInput
 
 # Global variables
 sNowServer = ""
 sNowUser = ""
 sNowPass = ""
-sNowHeaders = {
-    "Connection": "keep-alive",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-}
+
 
 #IPFToken = ""
 #IPFServer = "https://server.ipfabric.local"
@@ -32,63 +28,7 @@ sNowHeaders = {
 IPFServer = "https://demo7.ipfabric.io/"
 IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
 working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
-url = "https://demo7.ipfabric.io/api/v1/tables/inventory/sites"
 
-
-
-def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
-    """
-    Function to collect data from SNow and return the JSON containing hostname and site location
-    """
-    snow_ok = True
-    devices_loc = []
-    devicesEndpoint = (
-        "https://" + sNowServer + "/api/now/v1/cmdb/instance/cmdb_ci_netgear"
-    )
-    try:
-        sNowDevices_raw = httpx.get(
-            devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders
-        )
-        sNowDevices = sNowDevices_raw.json()["result"]
-    except Exception as exc:
-        print(f"##WARNING## Type of error: {type(exc)}")
-        print(f"##WARNING## Message: {exc.args}")
-        print("##WARNING## Can't process SNow data (server hibernation...)")
-        snow_ok = False
-    for dev in ipfDevs:
-        # get device sys_id
-        try:
-            device_sys = ""
-            for sys in sNowDevices:
-                if dev["hostname"] == sys["name"]:
-                    device_sys = sys["sys_id"]
-                    break
-            # query the API for that device, and extract the location
-            deviceEndpoint = devicesEndpoint + "/" + device_sys
-            sNowDevice = httpx.get(
-                deviceEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders
-            )
-            device_loc = sNowDevice.json()["result"]["attributes"]["location"][
-                "display_value"
-            ]
-            print(
-                f' Got the device [green]{dev["hostname"]}[/green] in {device_loc} - sys_id: {device_sys}\t\t',
-                end="\r",
-            )
-        except:
-            device_loc = "NOT IN SNOW"
-
-        devices_loc.append(
-            {
-                "hostname": dev["hostname"],
-                "location": device_loc,
-            }
-        )
-    if snow_ok:
-        print(f"##INFO## info on IPF devices collected from SNow")
-    else:
-        print(f"##WARNING## Issue with the collection from SNow")
-    return devices_loc
 
 def updateManualSiteSeparation(
     ipf: IPFClient, list_devices_sites, snapshot_id="", exact_match=False
@@ -242,198 +182,6 @@ def updateSnapshotSettings(
         print("  TIP: An empty value in the CSV could cause this issue")
     else:
         print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
-
-
-def readInput(source_file):
-    """
-    Function to read the input file (CSV, XLS, XLSX or JSON) and use this as the source to push data to IP Fabric
-    """
-
-    def df_to_json(df_input: DataFrame):
-        """
-        Sub function to clean the DataFrame from any special character, whitespace, and convert it to a json
-        """
-        try:
-            if not df_input.empty:
-                new_headers = ["hostname", "location"]
-                for i in range(0, len(df_input.columns) - 2):
-                    new_headers.append(i)
-                df_input.columns = new_headers
-                # we need to remove special character as they cause issues with pushing the data
-                # although this could cause hostname to not match the regex on IP Fabric
-                special_char = "[\(,\)]"
-                df_input["hostname"] = (
-                    df_input["hostname"]
-                    .str.replace(special_char, "-", regex=True)
-                    .str.strip()
-                )
-                df_input["location"] = (
-                    df_input["location"]
-                    .str.replace(special_char, "-", regex=True)
-                    .str.strip()
-                )
-                # df_input['hostname'] = df_input['hostname'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
-                # df_input['location'] = df_input['location'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
-                df_input = df_input.replace("", None).dropna()
-                result = df_input.to_json(orient="records")
-                return json.loads(result)
-            else:
-                print(
-                    f"##INFO## DataFrame is empty - '{source_file.name}' is not a valid file"
-                )
-        except Exception as exc:
-            print(f"##ERROR## Type of error: {type(exc)}")
-            print(f"##ERROR## Message: {exc.args}")
-            sys.exit(
-                f"##ERROR## EXIT -> DataFrame not created - '{source_file.name}' is not a valid file"
-            )
-
-    # we initiate an empty DataFramce
-    file_df = pd.DataFrame()
-    # for a JSON file
-    if source_file.name[-4:].lower() == "json":
-        try:
-            data = json.load(source_file)
-        except Exception as exc:
-            print(f"##ERROR## Type of error: {type(exc)}")
-            print(f"##ERROR## Message: {exc.args}")
-            sys.exit(
-                f"##ERROR## EXIT -> Invalid Data - '{source_file.name}' does not contain JSON data"
-            )
-    # for a CSV file
-    elif source_file.name[-4:].lower() == ".csv":
-        file_df = pd.DataFrame(
-            pd.read_csv(
-                source_file.name,
-                sep=None,
-                engine="python",
-                header=0,
-                index_col=False,
-                skipinitialspace=True,
-            )
-        )
-        data = df_to_json(file_df)
-    # for EXCEL file
-    elif (
-        source_file.name[-4:].lower() == ".xls"
-        or source_file.name[-5:].lower() == ".xlsx"
-    ):
-        file_df = pd.DataFrame(
-            pd.read_excel(source_file.name, header=0, index_col=False)
-        )
-        data = df_to_json(file_df)
-    # otherwise it's not supported
-    else:
-        print(f"##WARNING## Invalid file - '{source_file.name}' is not a valid file")
-
-    return data
-
-
-def regexOptimisation(locations_settings, grex=False):
-    """
-    This function will optimise the rules creation.
-    The input is a JSON containing one line per hostname, with the information regarding the site location
-    The idea will be to create a set of XX hostnames per regex rule (starting with 10, maybe 20)
-    For that we will sort the locations_settings
-    """
-
-    def generateHostnames(list_hostnames):
-        """
-        mini sub function to create the regex using grex if required
-        we return the list of devices
-        """
-        command = ["grex"]
-        for h in list_hostnames.split("|"):
-            command.append(h)
-        try:
-            result = subprocess.run(command, capture_output=True, text=True)
-        except FileNotFoundError as exc:
-            print(f"##ERROR## Type of error: {type(exc)}")
-            print(f"##ERROR## Message: {exc.args}")
-            sys.exit(
-                "##ERROR## EXIT -> GREX is not available - remove the 'grex' option, or install grex: https://github.com/pemistahl/grex#how-to-install"
-            )
-        print(
-            f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t",
-            end="\r",
-        )
-        return result.stdout
-
-    optimised_regex_list = []
-    site_dict = {}
-    if grex == True:
-        print(f"##INFO## Rules created will using regex generated using 'grex'")
-        max_device_per_rule = 20
-    else:
-        print(f"##INFO## Rules created will use the hostname")
-        max_device_per_rule = 10
-    # load the json into a DataFrame
-    try:
-        df = pd.json_normalize(locations_settings)
-    except Exception as exc:
-        print(f"##ERROR## Type of error: {type(exc)}")
-        print(f"##ERROR## Message: {exc.args}")
-        sys.exit(
-            f"##ERROR## EXIT -> Optimization Failure - could not load the JSON into a DataFrame"
-        )
-
-    # Sort by location first, then by hostname
-    df_sorted = df.sort_values(by=["location", "hostname"], ignore_index=True)
-    counter_device_per_rule = 0
-    list_hostnames = ""
-    prev_location = ""
-
-    for row in df_sorted.index:
-        hostname = df_sorted.at[row, "hostname"]
-        location = df_sorted.at[row, "location"]
-        # if it's empty, we go to the next iteration
-        if prev_location == "":
-            list_hostnames = hostname
-            prev_location = location
-            # print(f"first iteration")
-            continue
-        # if the location of this device is the same as prev_location, and we haven't reached the limit,
-        # we add this to the same rule
-        elif prev_location == location:
-            if counter_device_per_rule < max_device_per_rule - 1:
-                list_hostnames += "|" + hostname
-                counter_device_per_rule += 1
-            else:
-                if grex:
-                    site_dict["hostname"] = generateHostnames(list_hostnames)
-                else:
-                    site_dict["hostname"] = list_hostnames
-                site_dict["location"] = prev_location
-                optimised_regex_list.append(site_dict)
-                # we reset the counter and the prev location
-                counter_device_per_rule = 0
-                prev_location = location
-                list_hostnames = hostname
-                site_dict = {}
-
-        # if it's not the same location, we need to save the current regex we have into the dict
-        elif prev_location != location:
-            if grex:
-                site_dict["hostname"] = generateHostnames(list_hostnames)
-            else:
-                site_dict["hostname"] = list_hostnames
-            site_dict["location"] = prev_location
-            optimised_regex_list.append(site_dict)
-            # we reset the counter and the prev location
-            counter_device_per_rule = 0
-            prev_location = location
-            list_hostnames = hostname
-            site_dict = {}
-
-        # if it's the last entry, we need to save
-        if row == len(df_sorted) - 1:
-            if grex:
-                site_dict["hostname"] = generateHostnames(list_hostnames)
-            else:
-                site_dict["hostname"] = list_hostnames
-            site_dict["location"] = location
-            optimised_regex_list.append(site_dict)
-    return optimised_regex_list
 
 
 def main(

@@ -1,3 +1,24 @@
+import httpx
+
+"""
+This module will allow you to collect ServiceNow location for the devices in IP Fabric
+
+Required variables:
+    sNowServer: (str) IP Address or the DNS name of ServiceNow
+    sNowUser: (str) username for ServiceNow
+    sNowPass: (str) password for this user
+    ipfDevs: (list of dict) of all devices in IP Fabric, only hostname is required
+        [
+            {'hostname': 'xx', 'siteName': 'xx', 'loginIp': '10.0.0.1'},
+            {'hostname': 'yy', 'siteName': 'yy', 'loginIp': '10.0.0.1'}
+        ]
+
+Returns a list of dict:
+        [
+            {'hostname': 'xx', 'location': 'SNOW-location-xx'},
+            {'hostname': 'yy', 'location': 'SNOW-location-yy'},
+        ]
+"""
 
 def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     """
@@ -8,6 +29,11 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     devicesEndpoint = (
         "https://" + sNowServer + "/api/now/v1/cmdb/instance/cmdb_ci_netgear"
     )
+    sNowHeaders = {
+        "Connection": "keep-alive",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
     try:
         sNowDevices_raw = httpx.get(
             devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders
