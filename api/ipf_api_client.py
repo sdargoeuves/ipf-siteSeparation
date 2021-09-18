@@ -116,7 +116,7 @@ class IPFClient(httpxClient):
         self,
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = None,
+        snapshot_id: Optional[str] = "$last",
     ):
         """
         Method to fetch the list of sites from the IPF instance opened in the API client, or the one entered
@@ -136,6 +136,9 @@ class IPFClient(httpxClient):
             }
         ]
         """
+        if snapshot_id == "":
+            snapshot_id = "$last"
+        
         sites = self.fetch_table(
             "tables/inventory/sites",
             columns=["siteName", "id", "siteKey", "devicesCount"],

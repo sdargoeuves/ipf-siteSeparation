@@ -48,7 +48,7 @@ def updateManualSiteSeparation(
     url_manual_sep = IPFServer + "v1/sites/manual-separation"
     payload = [{"id": "SITEID","sn": "SN"},{"id": "SITEID","sn": "SN"}]
 
-def SiteId(ipf: IPFClient, locations_settings):
+def getSiteId(ipf: IPFClient, locations_settings):
     """
     This function takes each unique locations, and assign it to its id in IP Fabric
     either by finding the existing one, or creating a new siteName
@@ -61,10 +61,11 @@ def SiteId(ipf: IPFClient, locations_settings):
         # for each site we will look if it exists in IP Fabric, if not we will create it
         for ipf_site in dict_ipf_sites:
             if site_name == ipf_site['siteName']:
-                print(f'site in IPF: {site_name}')
+                print(f'##INFO## site already exists in IPF: {site_name}')
                 foundSite = True
                 return ipf_site['id']
         if not foundSite:
+            print(f'##INFO## new site created in IPF: {site_name}')
             return createSite(site_name)
 
     def createSite(site_name):
@@ -106,19 +107,44 @@ def SiteId(ipf: IPFClient, locations_settings):
         list_sites_id.append(dict_new_site)
     #list_sites_id dict contains: 
     # 'siteName' and 'id' for all sites in IP Fabric, including the ones recently created
+    
+    ## we need to add the "_catch_all_" site
+    list_sites_id.append({
+        'siteName': "_catch_all_",
+        'id': findSiteId("_catch_all")
+    })
 
     #Let's now merge both tables so we have the hostname sitename and site ID
     df_list_sites_id=pd.json_normalize(list_sites_id)
     list_devices_sites = pd.merge(df_locations_settings, df_list_sites_id, on = "siteName", how = "outer")
+    
+    return list_devices_sites
+    
+def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
 
     # As we need the SN to push the data into the manual site separation, we're going to repeat the merge
     # with the devDeets this time
+    
     """
     df3 is devDeets.json_normalize
     merge = pd.merge(df3, list_devices_sites, on = "hostname", how = "left")
     merge now contains all devices, plus the new site
     we just need to remove and NaN and replace by catch all
+
+    df_ipf_devices = pd.json_normalize(devDeets)
+    merge_list = pd.merge(df_ipf_devices, list_devices_sites, on = "hostname", how = "left").fillna("_catch_all_", inplace=True)
+
+    list_devices_sites.siteName.values[-1] == "_catch_all_"
+    list_devices_sites.id.values[-1] == "id of the _catch_all_"
+
+    In [126]: merge_list.siteName_y.fillna(list_devices_sites.siteName.values[-1], inplace=True)
+
+    In [127]: merge_list.id.fillna(list_devices_sites.id.values[-1], inplace=True)
+
     """
+    df_ipf_devices = pd.json_normalize(ipf_devices)
+    merge_list = pd.merge(df_ipf_devices, list_devices_sitesID, on = "hostname", how = "left")
+    return merge_list
 
 
 def updateSnapshotSettings(
