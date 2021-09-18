@@ -25,9 +25,12 @@ sNowPass = ""
 #IPFToken = ""
 #IPFServer = "https://server.ipfabric.local"
 #working_snapshot = ""  # if not specified, the last snapshot will be used
-IPFServer = "https://demo7.ipfabric.io/"
-IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
-working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
+#IPFServer = "https://demo7.ipfabric.io/"
+#IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
+#working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
+IPFServer = "https://192.168.220.133/"
+IPFToken = "1fb1e37b9d39481af3cf57a6817530be"
+working_snapshot = "$last" #this needs to be either $last, $prev, $lastLocked, or the ID of the desired snapshot
 
 
 def updateManualSiteSeparation(
