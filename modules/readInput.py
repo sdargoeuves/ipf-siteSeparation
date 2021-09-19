@@ -87,4 +87,3 @@ def readInput(source_file):
         print(f"##WARNING## Invalid file - '{source_file.name}' is not a valid file")
 
     return data
-

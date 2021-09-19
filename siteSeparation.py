@@ -28,7 +28,6 @@ IPFServer = "https://server.ipfabric.local"
 working_snapshot = ""  # if not specified, the last snapshot will be used
 
 
-
 def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     """
     Function to collect data from SNow and return the JSON containing hostname and site location

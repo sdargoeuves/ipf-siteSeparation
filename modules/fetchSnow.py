@@ -20,6 +20,7 @@ Returns a list of dict:
         ]
 """
 
+
 def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     """
     Function to collect data from SNow and return the JSON containing hostname and site location
@@ -78,4 +79,3 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     else:
         print(f"##WARNING## Issue with the collection from SNow")
     return devices_loc
-

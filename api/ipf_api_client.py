@@ -9,7 +9,6 @@ class IPFClient(httpxClient):
     ):
         """
         Initialise an IPFClient object.
-
         Sets properties:
         * base_url = IP Fabric instance provided in 'base_url' parameter, or the 'IPF_URL' environment variable
         * headers = Required headers for the IP Fabric API calls - embeds the API token from the 'token' parameter or 'IPF_TOKEN' environment variable
@@ -25,7 +24,11 @@ class IPFClient(httpxClient):
         except AssertionError:
             raise RuntimeError(f"base_url not provided or IPF_URL not set")
 
-        kwargs["base_url"] += "/api/v1"
+        ## if using IPF DEV server, only use /v1, no /api
+        if kwargs["base_url"].find(":8100") != -1:
+            kwargs["base_url"] += "/v1"
+        else:
+            kwargs["base_url"] += "/api/v1"
 
         if not token:
             try:
@@ -46,7 +49,6 @@ class IPFClient(httpxClient):
     def convert_snapshot_id(self, snapshot):
         """
         Method to convert a snapshot reference $last or $prev to its acutal ID
-
         Requires the snapshot reference "$last" or "$prev" or "$lastLocked"
         Returns the id of the snapshot, or the "$xxx" if not found
         """
@@ -61,7 +63,6 @@ class IPFClient(httpxClient):
     def snapshot_list(self):
         """
         Method to fetch a list of snapshots from the IPF instance opened in the API client.
-
         Takes no additional parameters.
         Returns a list of dictionaries in the form:
         [
@@ -95,7 +96,6 @@ class IPFClient(httpxClient):
     def fetch_last_snapshot_id(self):
         """
         Method to return the latest loaded snapshotfrom the IPF instance opened in the API client.
-
         Takes no additional parameters.
         Returns the ID of the latest snapshot as a string
         """
@@ -111,7 +111,7 @@ class IPFClient(httpxClient):
                     lastLoaded = True
                     break
         return lastSnap
-
+    
     def site_list(
         self,
         filters: Optional[Dict] = None,
@@ -120,12 +120,10 @@ class IPFClient(httpxClient):
     ):
         """
         Method to fetch the list of sites from the IPF instance opened in the API client, or the one entered
-
         Takes parameters to select:
         * filters - [optional] dictionary describing the table filters to be applied to the records (taken from IP Fabric table description)
         * pagination - [optional] start and length of the "page" of data required
         * snapshot_id - [optional] IP Fabric snapshot identifier to override the default defined at object initialisation
-
         Returns a list of dictionaries in the form:
         [
             {
@@ -138,7 +136,7 @@ class IPFClient(httpxClient):
         """
         if snapshot_id == "":
             snapshot_id = "$last"
-        
+            
         sites = self.fetch_table(
             "tables/inventory/sites",
             columns=["siteName", "id", "siteKey", "devicesCount"],
@@ -152,16 +150,14 @@ class IPFClient(httpxClient):
         self,
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = None,
+        snapshot_id: Optional[str] = "$last",
     ):
         """
         Method to fetch the list of devices from the IPF instance opened in the API client, or the one entered
-
         Takes parameters to select:
         * filters - [optional] dictionary describing the table filters to be applied to the records (taken from IP Fabric table description)
         * pagination - [optional] start and length of the "page" of data required
         * snapshot_id - [optional] IP Fabric snapshot identifier to override the default defined at object initialisation
-
         Returns a list of dictionaries in the form:
         [
             {
@@ -178,6 +174,9 @@ class IPFClient(httpxClient):
             }
         ]
         """
+        if snapshot_id == "":
+            snapshot_id = "$last"
+
         devices = self.fetch_table(
             "tables/inventory/devices",
             columns=[
@@ -204,18 +203,16 @@ class IPFClient(httpxClient):
         columns: List[str],
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = None,
+        snapshot_id: Optional[str] = "$last",
     ):
         """
         Method to fetch data from IP Fabric tables.
-
         Takes parameters to select:
         * url - [mandatory] a string containing the API endpoint for the table to be queried
         * columns - [mandatory] a list of strings describing which data is required as output
         * filters - [optional] dictionary describing the table filters to be applied to the records (taken from IP Fabric table description)
         * pagination - [optional] start and length of the "page" of data required
         * snapshot_id - [optional] IP Fabric snapshot identifier to override the default defined at object initialisation
-
         Returns JSON describing a dictionary containing the records required.
         """
 
@@ -228,7 +225,7 @@ class IPFClient(httpxClient):
 
         if snapshot_id == "":
             snapshot_id = "$last"
-
+        
         res = self.post(url, json=payload)
         res.raise_for_status()
         body = res.json()
@@ -239,7 +236,6 @@ class IPFDevice:
     def __init__(self, hostname: str):
         """
         Initialise an IPFDevice object.
-
         Sets properties:
         * hostname = hostname of the device we are looking for in IP Fabric.
         """

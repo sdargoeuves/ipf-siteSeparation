@@ -1,8 +1,11 @@
+import sys
 import subprocess
-
+import pandas as pd
+from api.ipf_api_client import IPFClient
 """
 
 """
+
 
 def regexOptimisation(locations_settings, grex=False):
     """
@@ -109,3 +112,69 @@ def regexOptimisation(locations_settings, grex=False):
             site_dict["location"] = location
             optimised_regex_list.append(site_dict)
     return optimised_regex_list
+
+
+def updateSnapshotSettings(
+    ipf: IPFClient, locations_settings, snapshot_id="", exact_match=False
+):
+    """
+    based on the locations_settings collected from SNow, or read via the input file
+    we will create the site separation rules to apply to the snapshot
+    """
+
+    if snapshot_id == "":
+        # Fetch last loaded snapshot info from IP Fabric
+        snapshot_id = ipf.snapshot_id
+    snapSettingsEndpoint = "/snapshots/" + snapshot_id + "/settings"
+    new_settings = {
+        "siteSeparation": [],
+    }
+    if exact_match:
+        for loc_setting in locations_settings:
+            new_settings["siteSeparation"].append(
+                {
+                    "note": loc_setting["hostname"],
+                    "regex": loc_setting["hostname"],
+                    "siteName": loc_setting["location"],
+                    "transformation": "none",  # none / uppercase / lowercase
+                    "type": "regex",
+                }
+            )
+    else:
+        for loc_setting in locations_settings:
+            try:
+                new_settings["siteSeparation"].append(
+                    {
+                        "note": loc_setting["hostname"].upper(),
+                        "regex": loc_setting["hostname"].upper(),
+                        "siteName": loc_setting["location"],
+                        "transformation": "uppercase",  # none / uppercase / lowercase
+                        "type": "regex",
+                    }
+                )
+            except AttributeError as exc:
+                print(f"##ERR## Type of error: {type(exc)}")
+                print(f"##ERR## Message: {exc.args}")
+                sys.exit(
+                    "##ERR## EXIT -> An empty value in the file may have caused this issue. No update done on IP Fabric"
+                )
+    # last entry will be a "Catch all rule"
+    new_settings["siteSeparation"].append(
+        {
+            "note": "Catch ALL",
+            "regex": ".*",
+            "siteName": "_catch_all_",
+            "transformation": "uppercase",  # none / uppercase / lowercase
+            "type": "regex",
+        }
+    )
+    # We update the site separation rules on IP Fabric
+    pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=60)
+    if pushSettings.is_error:
+        print(
+            f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
+        )
+        print("  MESSAGE: ", pushSettings.reason_phrase)
+        print("  TIP: An empty value in the CSV could cause this issue")
+    else:
+        print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
