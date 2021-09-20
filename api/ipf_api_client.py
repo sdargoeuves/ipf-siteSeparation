@@ -42,6 +42,8 @@ class IPFClient(httpxClient):
         if snapshot_id in ["$last", "$prev", "$lastLocked"]:
             self.snapshot_ref = snapshot_id
             self.snapshot_id = self.convert_snapshot_id(snapshot_id)
+        elif snapshot_id == "":
+            self.snapshot_id = self.convert_snapshot_id("$last")
         else:
             self.snapshot_ref = "N/A - only ID was provided"
             self.snapshot_id = snapshot_id
@@ -116,7 +118,7 @@ class IPFClient(httpxClient):
         self,
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = "$last",
+        snapshot_id: Optional[str] = None,
     ):
         """
         Method to fetch the list of sites from the IPF instance opened in the API client, or the one entered
@@ -142,7 +144,7 @@ class IPFClient(httpxClient):
             columns=["siteName", "id", "siteKey", "devicesCount"],
             filters=filters,
             pagination=pagination,
-            snapshot_id=snapshot_id,
+            snapshot_id=snapshot_id or self.snapshot_id,
         )
         return sites
 
@@ -150,7 +152,7 @@ class IPFClient(httpxClient):
         self,
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = "$last",
+        snapshot_id: Optional[str] = None,
     ):
         """
         Method to fetch the list of devices from the IPF instance opened in the API client, or the one entered
@@ -193,7 +195,7 @@ class IPFClient(httpxClient):
             ],
             filters=filters,
             pagination=pagination,
-            snapshot_id=snapshot_id,
+            snapshot_id=snapshot_id or self.snapshot_id,
         )
         return devices
 
@@ -203,7 +205,7 @@ class IPFClient(httpxClient):
         columns: List[str],
         filters: Optional[Dict] = None,
         pagination: Optional[Dict] = None,
-        snapshot_id: Optional[str] = "$last",
+        snapshot_id: Optional[str] = None,
     ):
         """
         Method to fetch data from IP Fabric tables.
@@ -216,6 +218,9 @@ class IPFClient(httpxClient):
         Returns JSON describing a dictionary containing the records required.
         """
 
+        if snapshot_id == "":
+            snapshot_id = "$last"
+        
         payload = dict(columns=columns, snapshot=snapshot_id or self.snapshot_id)
         if filters:
             payload["filters"] = filters
@@ -223,8 +228,6 @@ class IPFClient(httpxClient):
         if pagination:
             payload["pagination"] = pagination
 
-        if snapshot_id == "":
-            snapshot_id = "$last"
         
         res = self.post(url, json=payload)
         res.raise_for_status()

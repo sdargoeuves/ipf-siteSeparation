@@ -9,20 +9,24 @@ from api.ipf_api_client import IPFClient
 
 
 def updateManualSiteSeparation(
-    ipf: IPFClient, list_devicesSn_sitesId: List, snapshot_id=""
+    ipf: IPFClient, list_devicesSn_sitesId: List, snapshot_id=None
 ):
     """
     based on the locations_settings collected from SNow, or read via the input file
     we will create the manual site separation to apply to the snapshot
     """
-
     if snapshot_id == "":
         # Fetch last snapshot info from IP Fabric
         snapshot_id = ipf.fetch_last_snapshot_id()
 
+    # we load the list into a JSON
+    json_devicesSn_sitesId = json.loads(list_devicesSn_sitesId)
+
+    # Creation of the request to push the manual site separation
     url_manual_sep = str(ipf.base_url) + "sites/manual-separation"
-    payload = {"sites": json.loads(list_devicesSn_sitesId), "snapshot": snapshot_id}
-    push_newsites = ipf.post(url_manual_sep, json=payload)
+    payload = {"sites": json_devicesSn_sitesId, "snapshot": snapshot_id or ipf.snapshot_id}
+    print(f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices")
+    push_newsites = ipf.post(url_manual_sep, json=payload, timeout=120)
     push_newsites.raise_for_status()
     # This endpoint doesn't return 200 when successful
     if push_newsites.status_code == 204:

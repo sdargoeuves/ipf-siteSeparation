@@ -1,10 +1,8 @@
 # import
-import os
 import sys
-import subprocess
 import json
-import httpx
 import argparse
+from typing import List
 import pandas as pd
 from datetime import datetime
 from pandas.core.frame import DataFrame
@@ -12,6 +10,12 @@ from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
+from modules.readInput import readInput
+from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
+from modules.regexRules import (
+    regexOptimisation,
+    updateSnapshotSettings,
+)  # to update regex site separation instead of manual
 
 # Global variables
 sNowServer = ""

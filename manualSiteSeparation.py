@@ -18,7 +18,7 @@ from modules.regexRules import (
 )  # to update regex site separation instead of manual
 
 # Or ServiceNow
-from modules.fetchSnow import fetchSNowDevicesLoc
+from modules.snow import fetchSNowDevicesLoc
 
 # Global variables
 sNowServer = ""
@@ -30,15 +30,16 @@ sNowPass = ""
 # IPFServer = "https://server.ipfabric.local"
 # working_snapshot = ""  # if not specified, the last snapshot will be used
 # IPFToken = ""
-# IPFServer = "https://server.ipfabric.local"
-# working_snapshot = ""  # if not specified, the last snapshot will be used
-# IPFServer = "https://demo7.ipfabric.io/"
+# IPFServer = "https://demo7.ipfabric.io"
 # IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
 # working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
-IPFServer = "https://192.168.220.133/"
+#IPFServer = "http://10.0.9.17:8100"
+#IPFToken = "42dd4db9762c973efb155ed06f43dc13"
+
+IPFServer = "https://192.168.220.133"
 IPFToken = "1fb1e37b9d39481af3cf57a6817530be"
-working_snapshot = ""  # this needs to be either $last, $prev, $lastLocked, or the ID of the desired snapshot, NOT EMPTY
-# working_snapshot = "f6280b94-fad9-4b05-bbd8-0790da329f8d"
+working_snapshot = ""  # this needs to be either $last, $prev, $lastLocked, or the ID of the desired snapshot
+
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
@@ -75,7 +76,7 @@ def main(source_file=None, servicenow=False, generate_only=False):
         ipf = IPFClient(
             base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
         )
-        devDeets = ipf.device_list(snapshot_id=working_snapshot)
+        devDeets = ipf.device_list()
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
@@ -104,7 +105,7 @@ def main(source_file=None, servicenow=False, generate_only=False):
             ipf = IPFClient(
                 base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
             )
-            devDeets = ipf.device_list(snapshot_id=working_snapshot)
+            devDeets = ipf.device_list()
 
         # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
         list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
