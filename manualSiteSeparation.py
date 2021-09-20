@@ -20,26 +20,15 @@ from modules.regexRules import (
 # Or ServiceNow
 from modules.snow import fetchSNowDevicesLoc
 
-# Global variables
+# ServiceNow variables
 sNowServer = ""
 sNowUser = ""
 sNowPass = ""
 
-
-# IPFToken = ""
-# IPFServer = "https://server.ipfabric.local"
-# working_snapshot = ""  # if not specified, the last snapshot will be used
-# IPFToken = ""
-# IPFServer = "https://demo7.ipfabric.io"
-# IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
-# working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
-#IPFServer = "http://10.0.9.17:8100"
-#IPFToken = "42dd4db9762c973efb155ed06f43dc13"
-
-IPFServer = "https://192.168.220.133"
-IPFToken = "1fb1e37b9d39481af3cf57a6817530be"
-working_snapshot = ""  # this needs to be either $last, $prev, $lastLocked, or the ID of the desired snapshot
-
+#IP Fabric variables
+IPFServer = "https://server.ipfabric.local"
+IPFToken = ""
+working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
