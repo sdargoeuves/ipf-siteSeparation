@@ -174,7 +174,6 @@ def updateSnapshotSettings(
         }
     )
     # We update the site separation rules on IP Fabric for that snapshot
-    print(f"json to push:\n{new_settings}")
     pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=60)
     if pushSettings.is_error:
         print(
