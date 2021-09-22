@@ -23,28 +23,29 @@ def updateManualSiteSeparation(
     json_devicesSn_sitesId = json.loads(list_devicesSn_sitesId)
 
     # Creation of the request to push the manual site separation
-    url_manual_sep = str(ipf.base_url) + "sites/manual-separation"
+    url_manual_sep = "sites/manual-separation"
     payload = {"sites": json_devicesSn_sitesId, "snapshot": snapshot_id or ipf.snapshot_id}
     print(f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices")
-    push_newsites = ipf.post(url_manual_sep, json=payload, timeout=120)
+    push_newsites = ipf.post(url=url_manual_sep, json=payload, timeout=120)
     push_newsites.raise_for_status()
     # This endpoint doesn't return 200 when successful
     if push_newsites.status_code == 204:
-        print(f"##INFO## Manual site separation has been udpated!")
+        # Now we change the sitespearation settings to manual
+        url_site_sep_settings = "settings"
+        site_sep_settings = {"siteTypeCalc": "manual"}
+        print(f"##INFO## Changing settings to use Manual Site Separation...")
+        push_site_settings = ipf.patch(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+        push_site_settings.raise_for_status()
+        if not push_site_settings.is_error:
+            print(f"##INFO## Manual site separation has been udpated!")
+        else:
+            print(
+                f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
+            )
     else:
         print(
             f"##WARNING## Manual site separation has not been updated... return code: {push_newsites.status_code}"
         )
-
-    """
-    L38EXR1 / site L38_SW
-    "sn": "77596673",
-    "id": "1794084"
-
-    L38EXR2 / site _catch_all_
-    "sn": "77598722",
-    "id: "61052063"
-    """
 
 
 def getSiteId(ipf: IPFClient, locations_settings, catch_all):
@@ -72,9 +73,9 @@ def getSiteId(ipf: IPFClient, locations_settings, catch_all):
         create the site with the name provided and return the id of this site.
         """
         # Create the site
-        create_new_site_url = str(ipf.base_url) + "sites"
+        create_new_site_url = "sites"
         new_site_payload = {"name": site_name}
-        request_new_site = ipf.put(create_new_site_url, json=new_site_payload)
+        request_new_site = ipf.put(url=create_new_site_url, json=new_site_payload)
         request_new_site.raise_for_status()
         return request_new_site.json()["id"]
 
@@ -95,7 +96,7 @@ def getSiteId(ipf: IPFClient, locations_settings, catch_all):
     list_new_sites = df_locations_settings["siteName"].unique()
 
     # Get the Full list of Site in IP Fabric
-    request_ipf_sites = ipf.get(str(ipf.base_url) + "sites")
+    request_ipf_sites = ipf.get(url="sites")
     request_ipf_sites.raise_for_status()
     dict_ipf_sites = request_ipf_sites.json()
 

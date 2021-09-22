@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import json
 import pandas as pd
 from api.ipf_api_client import IPFClient
 """
@@ -26,16 +27,16 @@ def regexOptimisation(locations_settings, grex=False):
         try:
             result = subprocess.run(command, capture_output=True, text=True)
         except FileNotFoundError as exc:
-            print(f"##ERROR## Type of error: {type(exc)}")
-            print(f"##ERROR## Message: {exc.args}")
+            print(f"##ERR## Type of error: {type(exc)}")
+            print(f"##ERR## Message: {exc.args}")
             sys.exit(
-                "##ERROR## EXIT -> GREX is not available - remove the 'grex' option, or install grex: https://github.com/pemistahl/grex#how-to-install"
+                "##ERR## EXIT -> GREX is not available - remove the 'grex' option, or install grex: https://github.com/pemistahl/grex#how-to-install"
             )
         print(
             f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t",
             end="\r",
         )
-        return result.stdout
+        return result.stdout[:-1]
 
     optimised_regex_list = []
     site_dict = {}
@@ -115,18 +116,22 @@ def regexOptimisation(locations_settings, grex=False):
 
 
 def updateSnapshotSettings(
-    ipf: IPFClient, locations_settings, snapshot_id="", exact_match=False
+    ipf: IPFClient, locations_settings, snapshot_id="", exact_match=False, grex=False
 ):
     """
     based on the locations_settings collected from SNow, or read via the input file
     we will create the site separation rules to apply to the snapshot
     """
-
+    #if grex:
+    #    temp_string = str(locations_settings).rstrip().replace("'^","'^(").replace("$",")$")
+    #    #locations_settings = json.loads(temp_string.replace("'",'"'))
+    #    locations_settings = temp_string.replace("'",'"')
     if snapshot_id == "":
         # Fetch last loaded snapshot info from IP Fabric
         snapshot_id = ipf.snapshot_id
     snapSettingsEndpoint = "/snapshots/" + snapshot_id + "/settings"
     new_settings = {
+        "siteTypeCalc": "rules",
         "siteSeparation": [],
     }
     if exact_match:
@@ -168,7 +173,8 @@ def updateSnapshotSettings(
             "type": "regex",
         }
     )
-    # We update the site separation rules on IP Fabric
+    # We update the site separation rules on IP Fabric for that snapshot
+    print(f"json to push:\n{new_settings}")
     pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=60)
     if pushSettings.is_error:
         print(
@@ -178,3 +184,29 @@ def updateSnapshotSettings(
         print("  TIP: An empty value in the CSV could cause this issue")
     else:
         print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
+
+    # we also update the global settings with the same rules:
+    globalSettingsEndpoint = "/settings/site-separation"
+    pushGlobalSettings = ipf.put(url=globalSettingsEndpoint, json=new_settings["siteSeparation"], timeout=60)
+    if pushGlobalSettings.is_error:
+        print(
+            f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushGlobalSettings.request}\n      No update done on IP Fabric"
+        )
+        print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
+        print("  TIP: An empty value in the CSV could cause this issue")
+    else:
+        print(f"  --> SUCCESSFULLY Patched global settings")
+    
+    # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
+    url_site_sep_settings = "settings"
+    site_sep_settings = {"siteTypeCalc": "rules"}
+    print(f"##INFO## Changing settings to use Rules Site Separation...")
+    push_site_settings = ipf.patch(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+    push_site_settings.raise_for_status()
+    if not push_site_settings.is_error:
+        print(f"##INFO## Manual site separation has been udpated!")
+    else:
+        print(
+            f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
+        )
+    
