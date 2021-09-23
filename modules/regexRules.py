@@ -1,8 +1,10 @@
 import sys
 import subprocess
+from datetime import datetime
 import json
 import pandas as pd
 from api.ipf_api_client import IPFClient
+
 """
 
 """
@@ -33,7 +35,7 @@ def regexOptimisation(locations_settings, grex=False):
                 "##ERR## EXIT -> GREX is not available - remove the 'grex' option, or install grex: https://github.com/pemistahl/grex#how-to-install"
             )
         print(
-            f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t",
+            f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t",
             end="\r",
         )
         return result.stdout[:-1]
@@ -116,16 +118,17 @@ def regexOptimisation(locations_settings, grex=False):
 
 
 def updateSnapshotSettings(
-    ipf: IPFClient, locations_settings, snapshot_id="", exact_match=False, grex=False
+    ipf: IPFClient,
+    locations_settings,
+    snapshot_id="",
+    exact_match=False,
+    reg_out=False,
 ):
     """
     based on the locations_settings collected from SNow, or read via the input file
     we will create the site separation rules to apply to the snapshot
     """
-    #if grex:
-    #    temp_string = str(locations_settings).rstrip().replace("'^","'^(").replace("$",")$")
-    #    #locations_settings = json.loads(temp_string.replace("'",'"'))
-    #    locations_settings = temp_string.replace("'",'"')
+
     if snapshot_id == "":
         # Fetch last loaded snapshot info from IP Fabric
         snapshot_id = ipf.snapshot_id
@@ -173,39 +176,58 @@ def updateSnapshotSettings(
             "type": "regex",
         }
     )
-    # We update the site separation rules on IP Fabric for that snapshot
-    pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=60)
-    if pushSettings.is_error:
-        print(
-            f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
+    # if you want the JSON output, we will create the file, and not update IP Fabric
+    if reg_out:
+        print("")
+        # Ouput file name will either be the one given as a source, or auto generated.
+        output_file = "".join(
+            ["regex_rules-", datetime.now().strftime("%Y%m%d-%H%M"), ".json"]
         )
-        print("  MESSAGE: ", pushSettings.reason_phrase)
-        print("  TIP: An empty value in the CSV could cause this issue")
+        # Save the locations_settings into the file
+        with open(output_file, "w") as json_file:
+            json.dump(new_settings, json_file, indent=2)
+        print(
+            f"##INFO## file '{json_file.name}' has been created with the Rules information"
+        )
     else:
-        print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
+        # We update the site separation rules on IP Fabric for that snapshot
+        pushSettings = ipf.patch(
+            url=snapSettingsEndpoint, json=new_settings, timeout=60
+        )
+        if pushSettings.is_error:
+            print(
+                f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
+            )
+            print("  MESSAGE: ", pushSettings.reason_phrase)
+            print("  TIP: An empty value in the CSV could cause this issue")
+        else:
+            print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
 
-    # we also update the global settings with the same rules:
-    globalSettingsEndpoint = "/settings/site-separation"
-    pushGlobalSettings = ipf.put(url=globalSettingsEndpoint, json=new_settings["siteSeparation"], timeout=60)
-    if pushGlobalSettings.is_error:
-        print(
-            f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushGlobalSettings.request}\n      No update done on IP Fabric"
+        # we also update the global settings with the same rules:
+        globalSettingsEndpoint = "/settings/site-separation"
+        pushGlobalSettings = ipf.put(
+            url=globalSettingsEndpoint, json=new_settings["siteSeparation"], timeout=60
         )
-        print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
-        print("  TIP: An empty value in the CSV could cause this issue")
-    else:
-        print(f"  --> SUCCESSFULLY Patched global settings")
-    
-    # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
-    url_site_sep_settings = "settings"
-    site_sep_settings = {"siteTypeCalc": "rules"}
-    print(f"##INFO## Changing settings to use Rules Site Separation...")
-    push_site_settings = ipf.patch(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
-    push_site_settings.raise_for_status()
-    if not push_site_settings.is_error:
-        print(f"##INFO## Manual site separation has been udpated!")
-    else:
-        print(
-            f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
+        if pushGlobalSettings.is_error:
+            print(
+                f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushGlobalSettings.request}\n      No update done on IP Fabric"
+            )
+            print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
+            print("  TIP: An empty value in the CSV could cause this issue")
+        else:
+            print(f"  --> SUCCESSFULLY Patched global settings")
+
+        # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
+        url_site_sep_settings = "settings"
+        site_sep_settings = {"siteTypeCalc": "rules"}
+        print(f"##INFO## Changing settings to use Rules Site Separation...")
+        push_site_settings = ipf.patch(
+            url=url_site_sep_settings, json=site_sep_settings, timeout=120
         )
-    
+        push_site_settings.raise_for_status()
+        if not push_site_settings.is_error:
+            print(f"##INFO## Manual site separation has been udpated!")
+        else:
+            print(
+                f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
+            )

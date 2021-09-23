@@ -1,5 +1,11 @@
 # siteSeparation.py
 A script to use either ServiceNow or an input file (csv/xls/xlsx/json) to generate the site separation for IP Fabric
+This script creates Site Separation rules, as opposed to the manualSiteSeparation.py which uses the manual site separation.
+
+# manualSiteSeparation.py
+Just like siteSeparation.pu, this script uses either ServiceNow or an input file (csv/xls/xlsx/json) to assign each device to its location, using the Manual Site Separation.
+This script does not creates Site Separation rules.
+
 
 ## API folder
 contains the IP Fabric API client - [GitHub page] [api_client_ipf]
@@ -9,11 +15,13 @@ contains the IP Fabric API client - [GitHub page] [api_client_ipf]
 
 ***to use ServiceNow:***
 ```sh
-python3 siteSeparation.py -sn
+python3 manualSiteSeparation.py -snow
+python3 siteSeparation.py -snow
 ```
 ***to use a source file***
 ```sh
-python3 siteSeparation.py -f a_file.xlsx
+python3 manualSiteSeparation.py -f source_file.xlsx
+python3 siteSeparation.py -f source_file.xlsx 
 ```
 
 ## Requirements.txt

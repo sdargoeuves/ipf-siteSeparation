@@ -18,7 +18,6 @@ from modules.regexRules import (
 )  # to update regex site separation instead of manual
 
 
-
 # Global variables
 sNowServer = ""
 sNowUser = ""
@@ -33,6 +32,7 @@ IPFToken = ""
 IPFServer = "https://server.ipfabric.local"
 working_snapshot = ""  # if not specified, the last snapshot will be used
 
+
 IPFServer = "https://demo7.ipfabric.io"
 IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
 #working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
@@ -43,6 +43,7 @@ def main(
     generate_only=False,
     exact_match=False,
     grex=False,
+    reg_out=False,
 ):
     """
     Main function
@@ -111,7 +112,11 @@ def main(
 
         # We can now push this into IP Fabric
         updateSnapshotSettings(
-            ipf, optimised_locations_settings, working_snapshot, exact_match, grex
+            ipf,
+            optimised_locations_settings,
+            working_snapshot,
+            exact_match,
+            reg_out,
         )
         # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
@@ -161,6 +166,21 @@ if __name__ == "__main__":
         default=False,
         help="instead of using list of hostname, we use GREX to find the regex matching that same list",
     )
+    parser.add_argument(
+        "-reg_out",
+        "--regex_output",
+        dest="reg_out",
+        action="store_true",
+        default=False,
+        help="Use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings",
+    )
     args = parser.parse_args()
 
-    main(args.file, args.servicenow, args.generate, args.exact_match, args.grex)
+    main(
+        args.file,
+        args.servicenow,
+        args.generate,
+        args.exact_match,
+        args.grex,
+        args.reg_out,
+    )

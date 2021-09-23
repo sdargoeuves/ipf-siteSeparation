@@ -24,8 +24,13 @@ def updateManualSiteSeparation(
 
     # Creation of the request to push the manual site separation
     url_manual_sep = "sites/manual-separation"
-    payload = {"sites": json_devicesSn_sitesId, "snapshot": snapshot_id or ipf.snapshot_id}
-    print(f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices")
+    payload = {
+        "sites": json_devicesSn_sitesId,
+        "snapshot": snapshot_id or ipf.snapshot_id,
+    }
+    print(
+        f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices"
+    )
     push_newsites = ipf.post(url=url_manual_sep, json=payload, timeout=120)
     push_newsites.raise_for_status()
     # This endpoint doesn't return 200 when successful
@@ -34,7 +39,9 @@ def updateManualSiteSeparation(
         url_site_sep_settings = "settings"
         site_sep_settings = {"siteTypeCalc": "manual"}
         print(f"##INFO## Changing settings to use Manual Site Separation...")
-        push_site_settings = ipf.patch(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+        push_site_settings = ipf.patch(
+            url=url_site_sep_settings, json=site_sep_settings, timeout=120
+        )
         push_site_settings.raise_for_status()
         if not push_site_settings.is_error:
             print(f"##INFO## Manual site separation has been udpated!")

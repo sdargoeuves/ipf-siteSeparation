@@ -113,7 +113,7 @@ class IPFClient(httpxClient):
                     lastLoaded = True
                     break
         return lastSnap
-    
+
     def site_list(
         self,
         filters: Optional[Dict] = None,
@@ -138,7 +138,7 @@ class IPFClient(httpxClient):
         """
         if snapshot_id == "":
             snapshot_id = "$last"
-            
+
         sites = self.fetch_table(
             "tables/inventory/sites",
             columns=["siteName", "id", "siteKey", "devicesCount"],
@@ -220,7 +220,7 @@ class IPFClient(httpxClient):
 
         if snapshot_id == "":
             snapshot_id = "$last"
-        
+
         payload = dict(columns=columns, snapshot=snapshot_id or self.snapshot_id)
         if filters:
             payload["filters"] = filters
@@ -228,7 +228,6 @@ class IPFClient(httpxClient):
         if pagination:
             payload["pagination"] = pagination
 
-        
         res = self.post(url, json=payload)
         res.raise_for_status()
         body = res.json()

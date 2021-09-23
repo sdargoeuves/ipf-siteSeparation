@@ -25,7 +25,7 @@ sNowServer = ""
 sNowUser = ""
 sNowPass = ""
 
-#IP Fabric variables
+# IP Fabric variables
 IPFServer = "https://server.ipfabric.local"
 IPFToken = ""
 working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
