@@ -59,7 +59,14 @@ def regexOptimisation(locations_settings, grex=False):
         )
 
     # Sort by location first, then by hostname
-    df_sorted = df.sort_values(by=["location", "hostname"], ignore_index=True)
+    try:
+        df_sorted = df.sort_values(by=["location", "hostname"], ignore_index=True)
+    except KeyError as exc:
+        print(f"##ERROR## Type of error: {type(exc)}")
+        print(f"##ERROR## Message: {exc.args}")
+        sys.exit(
+            f"##ERROR## EXIT -> Optimization Failure - could not sort the DataFrame based on location/hostname. Check the source file."
+        )
     counter_device_per_rule = 0
     list_hostnames = ""
     prev_location = ""
