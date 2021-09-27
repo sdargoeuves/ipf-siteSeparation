@@ -150,6 +150,7 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
     merge_list.drop(columns=['column_nameA', 'column_nameB'], inplace=True)
 
     """
+
     df_ipf_devices = pd.json_normalize(ipf_devices)
     # cleaning up this DF by removing unwanted columns
     df_ipf_devices.drop(
@@ -165,6 +166,11 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
         ],
         inplace=True,
     )
+    
+    ## UPPER both DF hostname to ensure it's not case sensitive
+    df_ipf_devices["hostname"] = df_ipf_devices["hostname"].str.upper()
+    list_devices_sitesID["hostname"] = list_devices_sitesID["hostname"].str.upper()
+    
     # We now merge the list of devices from IP Fabric, with the list of Sites and their ID
     merge_list = pd.merge(
         df_ipf_devices, list_devices_sitesID, on="hostname", how="left"
