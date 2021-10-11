@@ -102,7 +102,7 @@ def getSiteId(ipf: IPFClient, locations_settings, catch_all):
     # df_sorted = df_locations_settings.sort_values(by=["siteName", "hostname"], ignore_index=True)
     list_new_sites = df_locations_settings["siteName"].unique()
 
-    # Get the Full list of Site in IP Fabric
+    # Get the Full list of Site in SiteSeparation in IP Fabric
     request_ipf_sites = ipf.get(url="sites")
     request_ipf_sites.raise_for_status()
     dict_ipf_sites = request_ipf_sites.json()

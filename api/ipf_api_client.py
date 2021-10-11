@@ -48,6 +48,9 @@ class IPFClient(httpxClient):
             self.snapshot_ref = "N/A - only ID was provided"
             self.snapshot_id = snapshot_id
 
+        # Variable indicating the Version of IP Fabric
+        self.os_version = self.get(url="os/version").json()["version"]
+
     def convert_snapshot_id(self, snapshot):
         """
         Method to convert a snapshot reference $last or $prev to its acutal ID
