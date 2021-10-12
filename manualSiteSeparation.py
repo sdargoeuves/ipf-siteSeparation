@@ -32,13 +32,6 @@ working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specifie
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
-IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
-working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
-
-# IPFServer = "https://demo8.ipfabric.io"
-# IPFToken = "fa9592956738d2cdad44b3145e099496"
-#
 
 
 def main(source_file=None, servicenow=False, generate_only=False):
