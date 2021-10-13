@@ -25,11 +25,6 @@ working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specifie
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
-IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
-working_snapshot = "$last"  # $last
-# ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
-
 
 def main(source_file=None, servicenow=False, generate_only=False):
     """
