@@ -44,7 +44,7 @@ def updateManualSiteSeparation(
         )
         push_site_settings.raise_for_status()
         if not push_site_settings.is_error:
-            print(f"##INFO## Manual site separation has been udpated!")
+            print(f"##INFO## Site separation has been udpated!")
         else:
             print(
                 f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"

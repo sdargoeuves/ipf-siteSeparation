@@ -206,35 +206,39 @@ def updateSnapshotSettings(
                 f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
             )
             print("  MESSAGE: ", pushSettings.reason_phrase)
-            print("  TIP: An empty value in the CSV could cause this issue")
+            print(
+                "  TIP: An empty value in the CSV could cause this issue"
+            )
         else:
             print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
 
-        # we also update the global settings with the same rules:
-        globalSettingsEndpoint = "/settings/site-separation"
-        pushGlobalSettings = ipf.put(
-            url=globalSettingsEndpoint, json=new_settings["siteSeparation"], timeout=60
-        )
-        if pushGlobalSettings.is_error:
-            print(
-                f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushGlobalSettings.request}\n      No update done on IP Fabric"
+            # we also update the global settings with the same rules:
+            globalSettingsEndpoint = "/settings/site-separation"
+            pushGlobalSettings = ipf.put(
+                url=globalSettingsEndpoint,
+                json=new_settings["siteSeparation"],
+                timeout=60,
             )
-            print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
-            print("  TIP: An empty value in the CSV could cause this issue")
-        else:
-            print(f"  --> SUCCESSFULLY Patched global settings")
+            if pushGlobalSettings.is_error:
+                print(
+                    f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushGlobalSettings.request}\n      No update done on IP Fabric"
+                )
+                print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
+                print("  TIP: An empty value in the CSV could cause this issue")
+            else:
+                print(f"  --> SUCCESSFULLY Patched global settings")
 
-        # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
-        url_site_sep_settings = "settings"
-        site_sep_settings = {"siteTypeCalc": "rules"}
-        print(f"##INFO## Changing settings to use Rules Site Separation...")
-        push_site_settings = ipf.patch(
-            url=url_site_sep_settings, json=site_sep_settings, timeout=120
-        )
-        push_site_settings.raise_for_status()
-        if not push_site_settings.is_error:
-            print(f"##INFO## Manual site separation has been udpated!")
-        else:
-            print(
-                f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
-            )
+                # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
+                url_site_sep_settings = "settings"
+                site_sep_settings = {"siteTypeCalc": "rules"}
+                print(f"##INFO## Changing settings to use Rules Site Separation...")
+                push_site_settings = ipf.patch(
+                    url=url_site_sep_settings, json=site_sep_settings, timeout=120
+                )
+                push_site_settings.raise_for_status()
+                if not push_site_settings.is_error:
+                    print(f"##INFO## Site separation has been udpated!")
+                else:
+                    print(
+                        f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
+                    )

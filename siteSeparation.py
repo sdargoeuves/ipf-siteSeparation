@@ -2,10 +2,7 @@
 import sys
 import json
 import argparse
-from typing import List
-import pandas as pd
 from datetime import datetime
-from pandas.core.frame import DataFrame
 from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
@@ -34,8 +31,8 @@ working_snapshot = ""  # if not specified, the last snapshot will be used
 
 
 IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "9c3cfd2352e63385ca9cb36e8678e5fa"
-# working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
+IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
+working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
 
 
 def main(
@@ -50,13 +47,13 @@ def main(
     Main function
     """
     # At least -f or -sn should have been used:
-    if source_file == None and not servicenow:
+    if source_file is None and not servicenow:
         sys.exit(
             f"##ERROR## You need to specify EITHER the source file, or ServiceNow as the input"
         )
     locations_settings = {}
     # if a source_file was entered as an input, we will read the file
-    if source_file != None:
+    if source_file is not None:
         print(f"##INFO## You've specified the source file: {source_file.name}")
         try:
             locations_settings = readInput(source_file)
@@ -74,8 +71,8 @@ def main(
     # otherwise we will collect the data from SNow and create the file
     if servicenow:
         print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
-        ipf = IPFClient(base_url=IPFServer, token=IPFToken)
-        devDeets = ipf.device_list(snapshot_id=working_snapshot)
+        ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
+        devDeets = ipf.device_list()
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
@@ -101,8 +98,8 @@ def main(
         try:
             ipf, devDeets
         except NameError:
-            ipf = IPFClient(base_url=IPFServer, token=IPFToken)
-            devDeets = ipf.device_list(snapshot_id=working_snapshot)
+            ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
+            devDeets = ipf.device_list()
 
         # Before pushing the data to IP Fabric we want to optimise the rules
         optimised_locations_settings = regexOptimisation(locations_settings, grex)
@@ -119,7 +116,6 @@ def main(
             exact_match,
             reg_out,
         )
-        # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
 
