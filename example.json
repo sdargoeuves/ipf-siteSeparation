@@ -1,7 +1,7 @@
 [
   {
     "hostname":"device1",
-    "location":"location1"
+    "location":"location3"
   },
   {
     "hostname":"device2",
@@ -9,11 +9,11 @@
   },
   {
     "hostname":"device3",
-    "location":"location2"
+    "location":"location1"
   },
   {
     "hostname":"device4",
-    "location":"location1"
+    "location":"location2"
   },
   {
     "hostname":"device5",
