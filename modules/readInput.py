@@ -19,6 +19,8 @@ def readInput(source_file):
                 for i in range(0, len(df_input.columns) - 2):
                     new_headers.append(i)
                 df_input.columns = new_headers
+                # we need to ensure the DF contains string, not numbers
+                df_input = df_input.applymap(str)
                 # we need to remove special character as they cause issues with pushing the data
                 # although this could cause hostname to not match the regex on IP Fabric
                 special_char = "[\(,\)]"

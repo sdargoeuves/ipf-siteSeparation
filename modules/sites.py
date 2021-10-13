@@ -24,8 +24,13 @@ def updateManualSiteSeparation(
 
     # Creation of the request to push the manual site separation
     url_manual_sep = "sites/manual-separation"
-    payload = {"sites": json_devicesSn_sitesId, "snapshot": snapshot_id or ipf.snapshot_id}
-    print(f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices")
+    payload = {
+        "sites": json_devicesSn_sitesId,
+        "snapshot": snapshot_id or ipf.snapshot_id,
+    }
+    print(
+        f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices"
+    )
     push_newsites = ipf.post(url=url_manual_sep, json=payload, timeout=120)
     push_newsites.raise_for_status()
     # This endpoint doesn't return 200 when successful
@@ -34,10 +39,12 @@ def updateManualSiteSeparation(
         url_site_sep_settings = "settings"
         site_sep_settings = {"siteTypeCalc": "manual"}
         print(f"##INFO## Changing settings to use Manual Site Separation...")
-        push_site_settings = ipf.patch(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+        push_site_settings = ipf.patch(
+            url=url_site_sep_settings, json=site_sep_settings, timeout=120
+        )
         push_site_settings.raise_for_status()
         if not push_site_settings.is_error:
-            print(f"##INFO## Manual site separation has been udpated!")
+            print(f"##INFO## Site separation has been udpated!")
         else:
             print(
                 f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
@@ -95,7 +102,7 @@ def getSiteId(ipf: IPFClient, locations_settings, catch_all):
     # df_sorted = df_locations_settings.sort_values(by=["siteName", "hostname"], ignore_index=True)
     list_new_sites = df_locations_settings["siteName"].unique()
 
-    # Get the Full list of Site in IP Fabric
+    # Get the Full list of Site in SiteSeparation in IP Fabric
     request_ipf_sites = ipf.get(url="sites")
     request_ipf_sites.raise_for_status()
     dict_ipf_sites = request_ipf_sites.json()
@@ -143,6 +150,7 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
     merge_list.drop(columns=['column_nameA', 'column_nameB'], inplace=True)
 
     """
+
     df_ipf_devices = pd.json_normalize(ipf_devices)
     # cleaning up this DF by removing unwanted columns
     df_ipf_devices.drop(
@@ -158,6 +166,11 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
         ],
         inplace=True,
     )
+
+    ## UPPER both DF hostname to ensure it's not case sensitive
+    df_ipf_devices["hostname"] = df_ipf_devices["hostname"].str.upper()
+    list_devices_sitesID["hostname"] = list_devices_sitesID["hostname"].str.upper()
+
     # We now merge the list of devices from IP Fabric, with the list of Sites and their ID
     merge_list = pd.merge(
         df_ipf_devices, list_devices_sitesID, on="hostname", how="left"

@@ -2,20 +2,13 @@
 import sys
 import json
 import argparse
-from typing import List
-import pandas as pd
 from datetime import datetime
-from pandas.core.frame import DataFrame
 from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
 from modules.readInput import readInput
 from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
-from modules.regexRules import (
-    regexOptimisation,
-    updateSnapshotSettings,
-)  # to update regex site separation instead of manual
 
 # Or ServiceNow
 from modules.snow import fetchSNowDevicesLoc
@@ -25,12 +18,17 @@ sNowServer = ""
 sNowUser = ""
 sNowPass = ""
 
-#IP Fabric variables
+# IP Fabric variables
 IPFServer = "https://server.ipfabric.local"
 IPFToken = ""
 working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
+
+IPFServer = "https://demo7.ipfabric.io"
+IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
+working_snapshot = "$last"  # $last
+# ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
 
 
 def main(source_file=None, servicenow=False, generate_only=False):
@@ -38,13 +36,13 @@ def main(source_file=None, servicenow=False, generate_only=False):
     Main function
     """
     # At least -f or -sn should have been used:
-    if source_file == None and not servicenow:
+    if source_file is None and not servicenow:
         sys.exit(
             f"##ERROR## You need to specify EITHER the source file, or ServiceNow as the input"
         )
     locations_settings = {}
     # if a source_file was entered as an input, we will read the file
-    if source_file != None:
+    if source_file is not None:
         print(f"##INFO## You've specified the source file: {source_file.name}")
         try:
             locations_settings = readInput(source_file)
