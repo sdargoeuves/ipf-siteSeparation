@@ -30,11 +30,6 @@ IPFServer = "https://server.ipfabric.local"
 working_snapshot = ""  # if not specified, the last snapshot will be used
 
 
-IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
-working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"
-
-
 def main(
     source_file=None,
     servicenow=False,
