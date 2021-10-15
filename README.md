@@ -1,10 +1,7 @@
 # siteSeparation.py
-A script to use either ServiceNow or an input file (csv/xls/xlsx/json) to generate the site separation for IP Fabric
-This script creates Site Separation rules, as opposed to the manualSiteSeparation.py which uses the manual site separation.
-
-# manualSiteSeparation.py
-Just like siteSeparation.pu, this script uses either ServiceNow or an input file (csv/xls/xlsx/json) to assign each device to its location, using the Manual Site Separation.
-This script does not creates Site Separation rules.
+This script will allow you to use an external source to change the Site Separation of IP Fabric.
+To do so, the script will use **Manual Site Separation**, which is the recommended way to update the settings.
+*The option to generate rules based on hostname is also available, but not recommended.*
 
 
 ## API folder
@@ -15,12 +12,10 @@ contains the IP Fabric API client - [GitHub page] [api_client_ipf]
 
 ***to use ServiceNow:***
 ```sh
-python3 manualSiteSeparation.py -snow
 python3 siteSeparation.py -snow
 ```
 ***to use a source file***
 ```sh
-python3 manualSiteSeparation.py -f source_file.xlsx
 python3 siteSeparation.py -f source_file.xlsx 
 ```
 
@@ -56,12 +51,23 @@ Script will collect for each device in IP Fabric the location in ServiceNow and 
 - -g, --generate
 
 use to only generate a new host/site JSON file from SNow. This won't update IP Fabric
+
+*Group for Rules creation:*
+*This is not the recommended method to update Site Separation, use with caution*
+
+- -u, --upper_match
+
+(Rules creation) the hostname will be capitalised in the regex rules
 - -e, --exact_match
 
-by default the regex and hostname will be capitalised in the regex. Use this option to keep the case from CSV/SNow
+(Rules creation) use this option to keep the case from the source (file or Snow)
 - -grex, --grex
-  
-instead of using list of hostname, we use GREX to generate the regex
+
+(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list
+- -reg_out, --regex_output
+
+(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings
+
 
 ## License
 

@@ -1,9 +1,24 @@
+"""
+- Site Separation script -
+This script will allow you to use an external source to change the Site Separation of IP Fabric.
+
+External source can either be:
+ - a file (csv, xls, xlsx, json)
+ - ServiceNow API
+
+The recommended option will use Manual Site Separation. There is also an option to use rules creation, which is not recommended.
+To execute the script:
+> python3 siteSeparation.py -f source_file
+or
+> python3 siteSeparation.py -snow
+
+"""
 # import
 import sys
 import json
 import argparse
 from datetime import datetime
-from rich import print  # Optional
+#from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
@@ -29,6 +44,8 @@ working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specifie
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
+IPFServer = "https://demo7.ipfabric.io"
+IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
 
 def main(
     source_file=None,
@@ -137,7 +154,7 @@ if __name__ == "__main__":
         description=" - Site Separation script -\n\
 Specify the source file containing the host/location details OR you can select to use ServiceNow as the source.\n\
 Recommended option will use Manual Site Separation. There is also an option to use rules creation, which is not recommended.\n\n\
-> python3 siteSeparation -f source_file",
+> python3 siteSeparation.py -f source_file",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     group_source = parser.add_mutually_exclusive_group()
