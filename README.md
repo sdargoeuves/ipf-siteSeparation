@@ -55,18 +55,18 @@ use to only generate a new host/site JSON file from SNow. This won't update IP F
 *Group for Rules creation:*
 *This is not the recommended method to update Site Separation, use with caution*
 
-- -u, --upper_match
+- *-u, --upper_match*
 
-(Rules creation) the hostname will be capitalised in the regex rules
-- -e, --exact_match
+*(Rules creation) the hostname will be capitalised in the regex rules*
+- *-e, --exact_match*
 
-(Rules creation) use this option to keep the case from the source (file or Snow)
-- -grex, --grex
+*(Rules creation) use this option to keep the case from the source (file or Snow)*
+- *-grex, --grex*
 
-(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list
-- -reg_out, --regex_output
+*(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list*
+- *-reg_out, --regex_output*
 
-(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings
+*(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings*
 
 
 ## License
