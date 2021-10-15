@@ -18,7 +18,8 @@ import sys
 import json
 import argparse
 from datetime import datetime
-#from rich import print  # Optional
+
+# from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
@@ -44,8 +45,6 @@ working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specifie
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 
-IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
 
 def main(
     source_file=None,
