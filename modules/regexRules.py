@@ -195,7 +195,7 @@ def updateSnapshotSettings(
     else:
         # We update the site separation rules on IP Fabric for that snapshot
         pushSettings = ipf.patch(
-            url=snapSettingsEndpoint, json=new_settings, timeout=60
+            url=snapSettingsEndpoint, json=new_settings, timeout=120
         )
         if pushSettings.is_error:
             print(
@@ -204,14 +204,16 @@ def updateSnapshotSettings(
             print("  MESSAGE: ", pushSettings.reason_phrase)
             print("  TIP: An empty value in the CSV could cause this issue")
         else:
-            print(f"  --> SUCCESSFULLY Patched settings for snapshot '{ipf.snapshot_id}'")
+            print(
+                f"  --> SUCCESSFULLY Patched settings for snapshot '{ipf.snapshot_id}'"
+            )
 
             # we also update the global settings with the same rules:
             globalSettingsEndpoint = "/settings/site-separation"
             pushGlobalSettings = ipf.put(
                 url=globalSettingsEndpoint,
                 json=new_settings["siteSeparation"],
-                timeout=60,
+                timeout=120,
             )
             if pushGlobalSettings.is_error:
                 print(

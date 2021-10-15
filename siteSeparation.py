@@ -7,33 +7,34 @@ from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
 from api.ipf_api_client import IPFClient
-from modules.snow import fetchSNowDevicesLoc
 from modules.readInput import readInput
+from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
-)  # to update regex site separation instead of manual
+)
 
+# Or ServiceNow
+from modules.snow import fetchSNowDevicesLoc
 
-# Global variables
+# ServiceNow variables
 sNowServer = ""
 sNowUser = ""
 sNowPass = ""
-sNowHeaders = {
-    "Connection": "keep-alive",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-}
 
-IPFToken = ""
+# IP Fabric variables
 IPFServer = "https://server.ipfabric.local"
-working_snapshot = ""  # if not specified, the last snapshot will be used
+IPFToken = ""
+working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
+# string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
+catch_all = "_catch_all_"
 
 
 def main(
     source_file=None,
     servicenow=False,
     generate_only=False,
+    upper_match=False,
     exact_match=False,
     grex=False,
     reg_out=False,
@@ -99,27 +100,45 @@ def main(
                 base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
             )
             devDeets = ipf.device_list()
+        # Site Separation using RULES - not the recommended way
+        if upper_match or exact_match or grex:
+            # Before pushing the data to IP Fabric we want to optimise the rules
+            optimised_locations_settings = regexOptimisation(locations_settings, grex)
+            if exact_match:
+                print(f"##INFO## Exact match Regex rules will be created\t\t")
+            else:
+                print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
-        # Before pushing the data to IP Fabric we want to optimise the rules
-        optimised_locations_settings = regexOptimisation(locations_settings, grex)
-        if exact_match:
-            print(f"##INFO## Exact match Regex rules will be created\t\t")
+            # We can now push this into IP Fabric
+            updateSnapshotSettings(
+                ipf,
+                optimised_locations_settings,
+                exact_match,
+                reg_out,
+            )
+        # Site Separation using Manual Site Separation - the recommended way
         else:
-            print(f"##INFO## Uppercase Regex rules will be created\t\t")
+            # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
+            list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
 
-        # We can now push this into IP Fabric
-        updateSnapshotSettings(
-            ipf,
-            optimised_locations_settings,
-            exact_match,
-            reg_out,
-        )
+            # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+            list_devices_sites_to_push = getDevicesSnSiteId(
+                devDeets, list_devices_sitesID
+            )
+
+            # Finally we update the settings of the manual site separation
+            updateManualSiteSeparation(ipf, list_devices_sites_to_push)
+            # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Specify the source file containing the host/location details OR you can select to use ServiceNow as the source\n"
+        description=" - Site Separation script -\n\
+Specify the source file containing the host/location details OR you can select to use ServiceNow as the source.\n\
+Recommended option will use Manual Site Separation. There is also an option to use rules creation, which is not recommended.\n\n\
+> python3 siteSeparation -f source_file",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     group_source = parser.add_mutually_exclusive_group()
     group_source.add_argument(
@@ -145,36 +164,54 @@ if __name__ == "__main__":
         default=False,
         help="use to only generate a new host/site JSON file from SNow. This won't update IP Fabric",
     )
-    parser.add_argument(
+    group_rules = parser.add_argument_group(
+        "Group for Rules creation",
+        "This is not the recommended method to update Site Separation, use with caution",
+    )
+    group_match_case = group_rules.add_mutually_exclusive_group()
+    group_match_case.add_argument(
+        "-u",
+        "--upper_match",
+        dest="upper_match",
+        action="store_true",
+        default=False,
+        help="(Rules creation) the hostname will be capitalised in the regex rules",
+    )
+    group_match_case.add_argument(
         "-e",
         "--exact_match",
         dest="exact_match",
         action="store_true",
         default=False,
-        help="by default the regex and hostname will be capitalised in the regex. Use this option to keep the case from CSV/SNow",
+        help="(Rules creation) use this option to keep the case from the source (file or Snow)",
     )
-    parser.add_argument(
+    group_match_case.add_argument(
         "-grex",
         "--grex",
         dest="grex",
         action="store_true",
         default=False,
-        help="instead of using list of hostname, we use GREX to find the regex matching that same list",
+        help="(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list",
     )
-    parser.add_argument(
+    # subparser = parser.add_subparsers(help="TEST")
+    # rule_creation = subparser.add_parser("-reg_out", default=False)
+    # rule_creation.add_argument(...)
+    group_rules.add_argument(
         "-reg_out",
         "--regex_output",
         dest="reg_out",
         action="store_true",
         default=False,
-        help="Use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings",
+        help="(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings",
     )
+
     args = parser.parse_args()
 
     main(
         args.file,
         args.servicenow,
         args.generate,
+        args.upper_match,
         args.exact_match,
         args.grex,
         args.reg_out,

@@ -37,7 +37,7 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     }
     try:
         sNowDevices_raw = httpx.get(
-            devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders
+            devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders, timeout=120
         )
         sNowDevices = sNowDevices_raw.json()["result"]
     except Exception as exc:
@@ -56,7 +56,10 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
             # query the API for that device, and extract the location
             deviceEndpoint = devicesEndpoint + "/" + device_sys
             sNowDevice = httpx.get(
-                deviceEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders
+                deviceEndpoint,
+                auth=(sNowUser, sNowPass),
+                headers=sNowHeaders,
+                timeout=120,
             )
             device_loc = sNowDevice.json()["result"]["attributes"]["location"][
                 "display_value"
