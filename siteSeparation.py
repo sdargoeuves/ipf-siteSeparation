@@ -66,7 +66,9 @@ def main(
     # otherwise we will collect the data from SNow and create the file
     if servicenow:
         print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
-        ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
+        ipf = IPFClient(
+            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+        )
         devDeets = ipf.device_list()
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
@@ -93,7 +95,9 @@ def main(
         try:
             ipf, devDeets
         except NameError:
-            ipf = IPFClient(base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot)
+            ipf = IPFClient(
+                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+            )
             devDeets = ipf.device_list()
 
         # Before pushing the data to IP Fabric we want to optimise the rules
@@ -107,7 +111,6 @@ def main(
         updateSnapshotSettings(
             ipf,
             optimised_locations_settings,
-            working_snapshot,
             exact_match,
             reg_out,
         )

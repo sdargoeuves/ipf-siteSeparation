@@ -8,17 +8,11 @@ from rich import print  # Optional
 from api.ipf_api_client import IPFClient
 
 
-def updateManualSiteSeparation(
-    ipf: IPFClient, list_devicesSn_sitesId: List, snapshot_id=None
-):
+def updateManualSiteSeparation(ipf: IPFClient, list_devicesSn_sitesId: List):
     """
     based on the locations_settings collected from SNow, or read via the input file
     we will create the manual site separation to apply to the snapshot
     """
-    if snapshot_id == "":
-        # Fetch last snapshot info from IP Fabric
-        snapshot_id = ipf.fetch_last_snapshot_id()
-
     # we load the list into a JSON
     json_devicesSn_sitesId = json.loads(list_devicesSn_sitesId)
 
@@ -26,7 +20,7 @@ def updateManualSiteSeparation(
     url_manual_sep = "sites/manual-separation"
     payload = {
         "sites": json_devicesSn_sitesId,
-        "snapshot": snapshot_id or ipf.snapshot_id,
+        "snapshot": ipf.snapshot_id,
     }
     print(
         f"##INFO## Manual Site Separation will be pushed for {len(json_devicesSn_sitesId)} devices"

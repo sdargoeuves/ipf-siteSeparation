@@ -35,7 +35,7 @@ def regexOptimisation(locations_settings, grex=False):
                 "##ERR## EXIT -> GREX is not available - remove the 'grex' option, or install grex: https://github.com/pemistahl/grex#how-to-install"
             )
         print(
-            f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t",
+            f"##INFO## GREX for hosts: {command[1:2]} to {command[-1:]} \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t",
             end="\r",
         )
         return result.stdout[:-1]
@@ -127,7 +127,6 @@ def regexOptimisation(locations_settings, grex=False):
 def updateSnapshotSettings(
     ipf: IPFClient,
     locations_settings,
-    snapshot_id="",
     exact_match=False,
     reg_out=False,
 ):
@@ -136,10 +135,7 @@ def updateSnapshotSettings(
     we will create the site separation rules to apply to the snapshot
     """
 
-    if snapshot_id == "":
-        # Fetch last loaded snapshot info from IP Fabric
-        snapshot_id = ipf.snapshot_id
-    snapSettingsEndpoint = "/snapshots/" + snapshot_id + "/settings"
+    snapSettingsEndpoint = "/snapshots/" + ipf.snapshot_id + "/settings"
     new_settings = {
         "siteTypeCalc": "rules",
         "siteSeparation": [],
@@ -192,9 +188,9 @@ def updateSnapshotSettings(
         )
         # Save the locations_settings into the file
         with open(output_file, "w") as json_file:
-            json.dump(new_settings, json_file, indent=2)
+            json.dump(new_settings["siteSeparation"], json_file, indent=2)
         print(
-            f"##INFO## file '{json_file.name}' has been created with the Rules information"
+            f"##INFO## file '{json_file.name}' has been created with the Rules information. No update done on IP Fabric"
         )
     else:
         # We update the site separation rules on IP Fabric for that snapshot
@@ -206,11 +202,9 @@ def updateSnapshotSettings(
                 f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
             )
             print("  MESSAGE: ", pushSettings.reason_phrase)
-            print(
-                "  TIP: An empty value in the CSV could cause this issue"
-            )
+            print("  TIP: An empty value in the CSV could cause this issue")
         else:
-            print(f"  --> SUCCESSFULLY Patched settings for snapshot '{snapshot_id}'")
+            print(f"  --> SUCCESSFULLY Patched settings for snapshot '{ipf.snapshot_id}'")
 
             # we also update the global settings with the same rules:
             globalSettingsEndpoint = "/settings/site-separation"
