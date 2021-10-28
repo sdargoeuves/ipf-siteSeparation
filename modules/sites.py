@@ -128,23 +128,6 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
     # As we need the SN to push the data into the manual site separation, we're going to repeat the merge
     # with the devDeets this time
 
-    """
-    df3 is devDeets.json_normalize
-    merge = pd.merge(df3, list_devices_sites, on = "hostname", how = "left")
-    merge now contains all devices, plus the new site
-    we just need to remove and NaN and replace by catch all
-
-    df_ipf_devices = pd.json_normalize(devDeets)
-    merge_list = pd.merge(df_ipf_devices, list_devices_sites, on = "hostname", how = "left").fillna("_catch_all_", inplace=True)
-
-    list_devices_sites.siteName.values[-1] == "_catch_all_"
-    list_devices_sites.id.values[-1] == "id of the _catch_all_"
-    merge_list.siteName_y.fillna(list_devices_sites.siteName.values[-1], inplace=True)
-    merge_list.id.fillna(list_devices_sites.id.values[-1], inplace=True)
-    merge_list.drop(columns=['column_nameA', 'column_nameB'], inplace=True)
-
-    """
-
     df_ipf_devices = pd.json_normalize(ipf_devices)
     # cleaning up this DF by removing unwanted columns
     df_ipf_devices.drop(
