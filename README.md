@@ -5,7 +5,7 @@ To do so, the script will use **Manual Site Separation**, which is the recommend
 
 
 ## API folder
-contains the IP Fabric API client - [GitHub page] [api_client_ipf]
+contains the IP Fabric API client - Github page: [api_client_ipf]
 
 
 ## How to use
