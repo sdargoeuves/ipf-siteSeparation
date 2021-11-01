@@ -209,9 +209,6 @@ Recommended option will use Manual Site Separation. There is also an option to u
         default=False,
         help="(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list",
     )
-    # subparser = parser.add_subparsers(help="TEST")
-    # rule_creation = subparser.add_parser("-reg_out", default=False)
-    # rule_creation.add_argument(...)
     group_rules.add_argument(
         "-reg_out",
         "--regex_output",
