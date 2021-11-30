@@ -1,4 +1,6 @@
 """
+Version 1.0 - 2021/11/29
+
 - Site Separation script -
 This script will allow you to use an external source to change the Site Separation of IP Fabric.
 
@@ -6,19 +8,19 @@ External source can either be:
  - a file (csv, xls, xlsx, json)
  - ServiceNow API
 
-The recommended option will use Manual Site Separation. There is also an option to use rules creation, which is not recommended.
+The recommended option will use Manual Site Separation. There is also an option to use rules creation.
 To execute the script:
 > python3 siteSeparation.py -f source_file
 or
 > python3 siteSeparation.py -snow
+or to create Site Separation Rules:
+> python3 siteSeparation.py -f source_file -u
 
 """
-# import
 import sys
 import json
 import argparse
 from datetime import datetime
-
 # from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
@@ -44,7 +46,8 @@ IPFToken = ""
 working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
-
+# define the number of hostname per line in the Site Separation Rules
+max_devices_per_rule = 20
 
 def main(
     source_file=None,
@@ -119,7 +122,7 @@ def main(
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(locations_settings, grex)
+            optimised_locations_settings = regexOptimisation(locations_settings, grex, max_devices_per_rule)
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:

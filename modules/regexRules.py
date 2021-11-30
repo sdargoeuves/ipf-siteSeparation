@@ -10,7 +10,7 @@ from api.ipf_api_client import IPFClient
 """
 
 
-def regexOptimisation(locations_settings, grex=False):
+def regexOptimisation(locations_settings, grex=False, max_devices_per_rule=20):
     """
     This function will optimise the rules creation.
     The input is a JSON containing one line per hostname, with the information regarding the site location
@@ -44,10 +44,8 @@ def regexOptimisation(locations_settings, grex=False):
     site_dict = {}
     if grex == True:
         print(f"##INFO## Rules created will using regex generated using 'grex'")
-        max_device_per_rule = 20
     else:
         print(f"##INFO## Rules created will use the hostname")
-        max_device_per_rule = 10
     # load the json into a DataFrame
     try:
         df = pd.json_normalize(locations_settings)
@@ -83,7 +81,7 @@ def regexOptimisation(locations_settings, grex=False):
         # if the location of this device is the same as prev_location, and we haven't reached the limit,
         # we add this to the same rule
         elif prev_location == location:
-            if counter_device_per_rule < max_device_per_rule - 1:
+            if counter_device_per_rule < max_devices_per_rule - 1:
                 list_hostnames += "|" + hostname
                 counter_device_per_rule += 1
             else:
@@ -144,7 +142,7 @@ def updateSnapshotSettings(
         for loc_setting in locations_settings:
             new_settings["siteSeparation"].append(
                 {
-                    "note": loc_setting["hostname"],
+                    "note": " >> ".join([loc_setting["hostname"], loc_setting["location"]]),
                     "regex": loc_setting["hostname"],
                     "siteName": loc_setting["location"],
                     "transformation": "none",  # none / uppercase / lowercase
@@ -156,7 +154,7 @@ def updateSnapshotSettings(
             try:
                 new_settings["siteSeparation"].append(
                     {
-                        "note": loc_setting["hostname"].upper(),
+                        "note": " >> ".join([loc_setting["hostname"], loc_setting["location"]]),
                         "regex": loc_setting["hostname"].upper(),
                         "siteName": loc_setting["location"],
                         "transformation": "uppercase",  # none / uppercase / lowercase
