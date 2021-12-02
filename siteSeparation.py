@@ -1,5 +1,5 @@
 """
-Version 1.0 - 2021/11/29
+Version 1.1 - 2021/12/02
 
 - Site Separation script -
 This script will allow you to use an external source to change the Site Separation of IP Fabric.
@@ -57,6 +57,7 @@ def main(
     exact_match=False,
     grex=False,
     reg_out=False,
+    keep_rules=False,
 ):
     """
     Main function
@@ -134,6 +135,7 @@ def main(
                 optimised_locations_settings,
                 exact_match,
                 reg_out,
+                keep_rules,
             )
         # Site Separation using Manual Site Separation - the recommended way
         else:
@@ -220,6 +222,14 @@ Recommended option will use Manual Site Separation. There is also an option to u
         default=False,
         help="(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings",
     )
+    group_rules.add_argument(
+        "-k",
+        "--keep",
+        dest="keep_rules",
+        action="store_true",
+        default=False,
+        help="(Rules creation) use this option if you want to KEEP existing rules: add new rules on top of the existing ones from the latest or working_snapshot **NOT RECOMMENDED**",
+    )
 
     args = parser.parse_args()
 
@@ -231,4 +241,5 @@ Recommended option will use Manual Site Separation. There is also an option to u
         args.exact_match,
         args.grex,
         args.reg_out,
+        args.keep_rules,
     )
