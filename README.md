@@ -14,9 +14,13 @@ contains the IP Fabric API client - Github page: [api_client_ipf]
 ```sh
 python3 siteSeparation.py -snow
 ```
-***to use a source file***
+***to use a source file to update Manual Site Separation***
 ```sh
 python3 siteSeparation.py -f source_file.xlsx 
+```
+***to use a source file to create Site Rules***
+```sh
+python3 siteSeparation.py -f source_file.csv --upper_match
 ```
 
 ## Requirements.txt
@@ -66,7 +70,10 @@ use to only generate a new host/site JSON file from SNow. This won't update IP F
 *(Rules creation) instead of using list of hostname, we use GREX to find the regex matching that same list*
 - *-reg_out, --regex_output*
 
-*(Rules creation) use this option to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings*
+*(Rules creation) use this option, with -u or -e or -grex, to generate the JSON containing the rules to be pushed. By using this option, you will not update the IP Fabric settings*
+- *-k, --keep*
+
+*(Rules creation) use this option, with -u or -e or -grex, if you want to KEEP existing rules: add new rules on top of the existing ones from the latest or working_snapshot \*\*NOT RECOMMENDED as it could lead to duplicate rules and performance issue\*\**
 
 
 ## License
