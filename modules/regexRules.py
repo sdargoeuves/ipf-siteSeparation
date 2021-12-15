@@ -1,5 +1,6 @@
 """
-Version 1.1 - 2021/12/02
+Version 1.2 - 2021/12/15
+Using ipfabric sdk (pip install ipfabric)
 """
 
 import sys
@@ -7,7 +8,8 @@ import subprocess
 from datetime import datetime
 import json
 import pandas as pd
-from api.ipf_api_client import IPFClient
+#from api.ipf_api_client import IPFClient
+from ipfabric import IPFClient
 
 
 def regexOptimisation(locations_settings, grex=False, max_devices_per_rule=20):

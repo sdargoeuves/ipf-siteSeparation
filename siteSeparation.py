@@ -1,5 +1,6 @@
 """
-Version 1.1 - 2021/12/02
+Version 1.2 - 2021/12/14
+NOW USING: pip install ipfabric
 
 - Site Separation script -
 This script will allow you to use an external source to change the Site Separation of IP Fabric.
@@ -17,14 +18,15 @@ or to create Site Separation Rules:
 > python3 siteSeparation.py -f source_file -u
 
 """
+# import
 import sys
 import json
 import argparse
 from datetime import datetime
-# from rich import print  # Optional
+from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
-from api.ipf_api_client import IPFClient
+from ipfabric import IPFClient
 from modules.readInput import readInput
 from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
 from modules.regexRules import (
@@ -36,18 +38,19 @@ from modules.regexRules import (
 from modules.snow import fetchSNowDevicesLoc
 
 # ServiceNow variables
-sNowServer = ""
-sNowUser = ""
-sNowPass = ""
+sNowServer = "dev103869.service-now.com/"
+sNowUser = "ipfabric"
+sNowPass = "IPFabric01!"
 
 # IP Fabric variables
-IPFServer = "https://server.ipfabric.local"
-IPFToken = ""
-working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
+IPFServer = "https://ipfabric.server"
+IPFToken = "token"
+working_snapshot = ""
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
 # define the number of hostname per line in the Site Separation Rules
 max_devices_per_rule = 20
+
 
 def main(
     source_file=None,
@@ -62,6 +65,10 @@ def main(
     """
     Main function
     """
+
+    #List of required columns for the device inventory
+    inventory_devices_columns = ['hostname','siteName','loginIp','loginType','vendor','platform','family','version','sn','devType',]
+
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
         sys.exit(
@@ -90,7 +97,7 @@ def main(
         ipf = IPFClient(
             base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
         )
-        devDeets = ipf.device_list()
+        devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
@@ -119,7 +126,7 @@ def main(
             ipf = IPFClient(
                 base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
             )
-            devDeets = ipf.device_list()
+            devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
