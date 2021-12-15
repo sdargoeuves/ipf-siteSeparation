@@ -1,3 +1,4 @@
+ipfabric
 httpx
 pandas
 openpyxl

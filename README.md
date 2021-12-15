@@ -4,8 +4,8 @@ To do so, the script will use **Manual Site Separation**, which is the recommend
 *The option to generate rules based on hostname is also available, but not recommended.*
 
 
-## API folder
-contains the IP Fabric API client - Github page: [api_client_ipf]
+## use of IPFabric python module
+Github page: [ipfabric-python]
 
 
 ## How to use
@@ -29,6 +29,7 @@ Find the required library in order for this script to work
 
 | Library | Description |
 | ------ | ------ |
+| ipfabric | Mandatory - IP Fabric SDK library |
 | httpx | Mandatory - HTTP client |
 | pandas | Mandatory - Data Analysis |
 | *openpyxl* | *Optional - only needed to support XLSX file* |
@@ -84,6 +85,6 @@ MIT
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
-   [api_client_ipf]: <https://github.com/community-fabric/integration-demos/tree/main/api_clients/ipf>
+   [ipfabric-python]: <https://github.com/community-fabric/python-ipfabric>
    [grex_github]: <https://github.com/pemistahl/grex>
    [grex_install]:<https://github.com/pemistahl/grex#how-to-install>
