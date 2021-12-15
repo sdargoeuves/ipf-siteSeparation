@@ -8,7 +8,8 @@ import subprocess
 from datetime import datetime
 import json
 import pandas as pd
-#from api.ipf_api_client import IPFClient
+
+# from api.ipf_api_client import IPFClient
 from ipfabric import IPFClient
 
 
@@ -146,7 +147,9 @@ def updateSnapshotSettings(
         for loc_setting in locations_settings:
             new_settings["siteSeparation"].append(
                 {
-                    "note": " >> ".join([loc_setting["hostname"], loc_setting["location"]]),
+                    "note": " >> ".join(
+                        [loc_setting["hostname"], loc_setting["location"]]
+                    ),
                     "regex": loc_setting["hostname"],
                     "siteName": loc_setting["location"],
                     "transformation": "none",  # none / uppercase / lowercase
@@ -158,7 +161,9 @@ def updateSnapshotSettings(
             try:
                 new_settings["siteSeparation"].append(
                     {
-                        "note": " >> ".join([loc_setting["hostname"], loc_setting["location"]]),
+                        "note": " >> ".join(
+                            [loc_setting["hostname"], loc_setting["location"]]
+                        ),
                         "regex": loc_setting["hostname"].upper(),
                         "siteName": loc_setting["location"],
                         "transformation": "uppercase",  # none / uppercase / lowercase
@@ -186,14 +191,18 @@ def updateSnapshotSettings(
             f"##INFO## file '{json_file.name}' has been created with the Rules information. No update done on IP Fabric"
         )
         return
-    
+
     # last entry will be a "Catch all rule", only if we are deleting the existing rules
     if keep_rules:
-        print(f"\n##WARNING## You are ADDING rules on top of existing ones. This may creates duplicate rules and affect performance.\n")
-        #previous_rules = ipf.get("/settings/site-separation").json()["data"]
-        #We collect existing rules for the snapshot used to create the class IPF
-        previous_rules = ipf.get("/snapshots/" + ipf.snapshot_id + "/settings").json()["siteSeparation"]
-        #if there are previous rules, we won't need to add the the catch all at the end
+        print(
+            f"\n##WARNING## You are ADDING rules on top of existing ones. This may creates duplicate rules and affect performance.\n"
+        )
+        # previous_rules = ipf.get("/settings/site-separation").json()["data"]
+        # We collect existing rules for the snapshot used to create the class IPF
+        previous_rules = ipf.get("/snapshots/" + ipf.snapshot_id + "/settings").json()[
+            "siteSeparation"
+        ]
+        # if there are previous rules, we won't need to add the the catch all at the end
         if previous_rules != []:
             create_catch_all_rule = False
             rule_id = 0
@@ -214,9 +223,7 @@ def updateSnapshotSettings(
             }
         )
     # We update the site separation rules on IP Fabric for that snapshot
-    pushSettings = ipf.patch(
-        url=snapSettingsEndpoint, json=new_settings, timeout=120
-    )
+    pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=120)
     if pushSettings.is_error:
         print(
             f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
@@ -224,9 +231,7 @@ def updateSnapshotSettings(
         print("  MESSAGE: ", pushSettings.reason_phrase)
         print("  TIP: An empty value in the CSV could cause this issue")
     else:
-        print(
-            f"  --> SUCCESSFULLY Patched settings for snapshot '{ipf.snapshot_id}'"
-        )
+        print(f"  --> SUCCESSFULLY Patched settings for snapshot '{ipf.snapshot_id}'")
 
         # we also update the global settings with the same rules:
         globalSettingsEndpoint = "/settings/site-separation"

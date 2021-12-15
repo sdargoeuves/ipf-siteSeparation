@@ -4,10 +4,6 @@ To do so, the script will use **Manual Site Separation**, which is the recommend
 *The option to generate rules based on hostname is also available, but not recommended.*
 
 
-## use of IPFabric python module
-Github page: [ipfabric-python]
-
-
 ## How to use
 
 ***to use ServiceNow:***
@@ -29,7 +25,7 @@ Find the required library in order for this script to work
 
 | Library | Description |
 | ------ | ------ |
-| ipfabric | Mandatory - IP Fabric SDK library |
+| ipfabric | Mandatory - IP Fabric python module [python-ipfabric] |
 | httpx | Mandatory - HTTP client |
 | pandas | Mandatory - Data Analysis |
 | *openpyxl* | *Optional - only needed to support XLSX file* |

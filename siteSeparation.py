@@ -66,8 +66,19 @@ def main(
     Main function
     """
 
-    #List of required columns for the device inventory
-    inventory_devices_columns = ['hostname','siteName','loginIp','loginType','vendor','platform','family','version','sn','devType',]
+    # List of required columns for the device inventory
+    inventory_devices_columns = [
+        "hostname",
+        "siteName",
+        "loginIp",
+        "loginType",
+        "vendor",
+        "platform",
+        "family",
+        "version",
+        "sn",
+        "devType",
+    ]
 
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
@@ -130,7 +141,9 @@ def main(
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(locations_settings, grex, max_devices_per_rule)
+            optimised_locations_settings = regexOptimisation(
+                locations_settings, grex, max_devices_per_rule
+            )
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:
