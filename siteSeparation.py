@@ -43,13 +43,8 @@ sNowUser = "ipfabric"
 sNowPass = "IPFabric01!"
 
 # IP Fabric variables
-IPFServer = "https://demo7.ipfabric.io"
-IPFToken = "36b9c3225afa8e7118f81ffdd739deb4"
-#working_snapshot = "1b80fafc-7674-4299-87b3-1faf7e1b931f"  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
-#IPFServer = "http://10.0.9.37:8100"
-#IPFToken = "4e4047ce37923e7d502912a0ae5471a1"
-#IPFServer = "https://192.168.220.128"
-#IPFToken = "12e3bb797ed47914d86f945c6c24e3bc"
+IPFServer = "https://ipfabric.server"
+IPFToken = "token"
 working_snapshot = ""
 # string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
 catch_all = "_catch_all_"
