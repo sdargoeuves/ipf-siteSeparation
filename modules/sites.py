@@ -1,3 +1,8 @@
+"""
+Version 1.2 - 2021/12/15
+Using ipfabric sdk (pip install ipfabric)
+"""
+
 import sys
 import json
 from typing import List
@@ -5,7 +10,7 @@ import pandas as pd
 from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
-from api.ipf_api_client import IPFClient
+from ipfabric import IPFClient
 
 
 def updateManualSiteSeparation(ipf: IPFClient, list_devicesSn_sitesId: List):
