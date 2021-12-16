@@ -25,14 +25,13 @@ Find the required library in order for this script to work
 
 | Library | Description |
 | ------ | ------ |
-| ipfabric | Mandatory - IP Fabric python module |
+| ipfabric | Mandatory - [IP Fabric python module][ipfabric-python] |
 | httpx | Mandatory - HTTP client |
 | pandas | Mandatory - Data Analysis |
 | *openpyxl* | *Optional - only needed to support XLSX file* |
 | *xlrd* | *Optional - only needed to support XLS file* |
 | *rich* | *Optional - Enhance terminal formatting* |
 
-More information for the ipfabric module [python-ipfabric]
 
 ## GREX
 
