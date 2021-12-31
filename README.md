@@ -4,6 +4,13 @@ To do so, the script will use **Manual Site Separation**, which is the recommend
 *The option to generate rules based on hostname is also available, but not recommended.*
 
 
+## How to install
+
+***Install ipfabric Python module and dependencies***
+```sh
+pip install -r requirements.txt
+```
+
 ## How to use
 
 ***to use ServiceNow:***
@@ -27,11 +34,10 @@ Find the required library in order for this script to work
 | ------ | ------ |
 | ipfabric | Mandatory - [IP Fabric python module][ipfabric-python] |
 | httpx | Mandatory - HTTP client |
-| pandas | Mandatory - Data Analysis |
+| pandas  | Mandatory - Data Analysis |
 | *openpyxl* | *Optional - only needed to support XLSX file* |
 | *xlrd* | *Optional - only needed to support XLS file* |
 | *rich* | *Optional - Enhance terminal formatting* |
-
 
 ## GREX
 
