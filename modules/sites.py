@@ -1,8 +1,3 @@
-"""
-Version 1.2 - 2021/12/15
-Using ipfabric sdk (pip install ipfabric)
-"""
-
 import sys
 import json
 from typing import List
@@ -51,6 +46,66 @@ def updateManualSiteSeparation(ipf: IPFClient, list_devicesSn_sitesId: List):
     else:
         print(
             f"##WARNING## Manual site separation has not been updated... return code: {push_newsites.status_code}"
+        )
+
+
+def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
+    """
+    based on the locations_settings collected from SNow, or read via the input file
+    we will create the manual site separation to apply to the snapshot
+    """
+    # we load the list into a JSON
+    json_devicesSn_sitesId = json.loads(list_devicesSn_siteName)
+    for item in json_devicesSn_sitesId:
+        item["name"] = "siteName"
+    # Creation of the request to push the manual site separation
+    url_local_attribute = "attributes/local"
+    payload_local = {
+        "attributes": json_devicesSn_sitesId,
+        "snapshot": ipf.snapshot_id,
+    }
+    print(
+        f"##INFO## Attribute will be pushed for {len(json_devicesSn_sitesId)} devices"
+    )
+    push_attributes = ipf.put(url=url_local_attribute, json=payload_local, timeout=120)
+    push_attributes.raise_for_status()
+    # This endpoint does return 200 when successful
+    if push_attributes.status_code == 200:
+        # Now we change the attribute in the global table
+        url_global_attribute = "attributes/global"
+        payload_global = {
+            "attributes": json_devicesSn_sitesId,
+        }
+        push_attributes = ipf.put(url=url_global_attribute, json=payload_global, timeout=120)
+        push_attributes.raise_for_status()
+
+        url_site_sep_settings = "settings/site-separation"
+        print(f"##INFO## Changing Global settings to use Manual Site Separation / Attribute...")
+        get_site_settings = ipf.get(url=url_site_sep_settings)
+        site_sep_settings = {"manualEnabled":True,"neighborshipFallbackEnabled":True, "rules": get_site_settings.json()["rules"]}
+
+        push_site_settings = ipf.put(
+            url=url_site_sep_settings, json=site_sep_settings, timeout=120
+        )
+        push_site_settings.raise_for_status()
+
+        url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
+        print(f"##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute...")
+        get_site_settings_snapshot = ipf.get(url=url_site_sep_settings_snapshot)
+        site_sep_settings_snapshot = {"siteSeparation": {"manualEnabled":True,"neighborshipFallbackEnabled":True, "rules": get_site_settings_snapshot.json()["siteSeparation"]["rules"]}}
+        push_site_settings_snapshot = ipf.patch(
+            url=url_site_sep_settings_snapshot, json=site_sep_settings_snapshot, timeout=120
+        )
+
+        if not push_site_settings.is_error:
+            print(f"##INFO## Site separation has been udpated!")
+        else:
+            print(
+                f"##WARNING## Settings for using Attributes have not been updated... return code: {push_site_settings.status_code}"
+            )
+    else:
+        print(
+            f"##WARNING## Local Attributes have not been updated... return code: {push_attributes.status_code}"
         )
 
 
@@ -162,4 +217,45 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
     merge_list.siteName.fillna(list_devices_sitesID.siteName.values[-1], inplace=True)
     merge_list.id.fillna(list_devices_sitesID.id.values[-1], inplace=True)
     merge_list.drop(columns=["hostname", "siteName"], inplace=True)
+    return merge_list.to_json(orient="records")
+
+
+
+def getDevicesSnSiteId_v4_3(ipf_devices: List, locations_settings: List, catch_all: str):
+
+    # As we need the SN to push the data into the manual site separation, we're going to repeat the merge
+    # with the devDeets this time
+
+    df_ipf_devices = pd.json_normalize(ipf_devices)
+    # cleaning up this DF by removing unwanted columns
+    df_ipf_devices.drop(
+        columns=[
+            "siteName",
+            "loginIp",
+            "loginType",
+            "vendor",
+            "platform",
+            "family",
+            "version",
+            "devType",
+        ],
+        inplace=True,
+    )
+
+    ## UPPER both DF hostname to ensure it's not case sensitive
+    df_ipf_devices["hostname"] = df_ipf_devices["hostname"].str.upper()
+    for item in locations_settings:
+        item["hostname"] = item["hostname"].upper()
+
+    locations_name = pd.json_normalize(locations_settings).rename(
+        {"hostname": "hostname", "location": "value"}, axis=1
+    )
+    # We now merge the list of devices from IP Fabric, with the list of Sites and their ID
+    merge_list = pd.merge(
+        df_ipf_devices, locations_name, on="hostname", how="left"
+    )
+    # the _catch_all_ sites need to be filled for any sites not from the source file
+    # the last entry from that list is the catch all site
+    merge_list.value.fillna(catch_all, inplace=True)
+    merge_list.drop(columns=["hostname"], inplace=True)
     return merge_list.to_json(orient="records")

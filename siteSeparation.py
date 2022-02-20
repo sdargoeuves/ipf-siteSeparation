@@ -28,7 +28,7 @@ from rich import print  # Optional
 # Module to interact with IP Fabric’s API
 from ipfabric import IPFClient
 from modules.readInput import readInput
-from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
+from modules.sites import getDevicesSnSiteId_v4_3, getSiteId, getDevicesSnSiteId, updateAttribute_v4_3, updateManualSiteSeparation
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
@@ -52,6 +52,7 @@ catch_all = "_catch_all_"
 max_devices_per_rule = 20
 
 
+
 def main(
     source_file=None,
     servicenow=False,
@@ -66,19 +67,8 @@ def main(
     Main function
     """
 
-    # List of required columns for the device inventory
-    inventory_devices_columns = [
-        "hostname",
-        "siteName",
-        "loginIp",
-        "loginType",
-        "vendor",
-        "platform",
-        "family",
-        "version",
-        "sn",
-        "devType",
-    ]
+    #List of required columns for the device inventory
+    inventory_devices_columns = ['hostname','siteName','loginIp','loginType','vendor','platform','family','version','sn','devType',]
 
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
@@ -141,35 +131,53 @@ def main(
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(
-                locations_settings, grex, max_devices_per_rule
-            )
+            optimised_locations_settings = regexOptimisation(locations_settings, grex, max_devices_per_rule)
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:
                 print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
             # We can now push this into IP Fabric
-            updateSnapshotSettings(
-                ipf,
-                optimised_locations_settings,
-                exact_match,
-                reg_out,
-                keep_rules,
-            )
+            if "4.3." in ipf.os_version:
+                print("##ERR## Not yet supported for version >= 4.3.0")
+                #updateSnapshotSettings_v4_3(
+                #    ipf,
+                #    optimised_locations_settings,
+                #    exact_match,
+                #    reg_out,
+                #    keep_rules,
+                #)
+            else:
+                    updateSnapshotSettings(
+                    ipf,
+                    optimised_locations_settings,
+                    exact_match,
+                    reg_out,
+                    keep_rules,
+                )
         # Site Separation using Manual Site Separation - the recommended way
         else:
-            # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
-            list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
+            if "4.3." in ipf.os_version:
 
-            # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
-            list_devices_sites_to_push = getDevicesSnSiteId(
-                devDeets, list_devices_sitesID
-            )
+                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+                list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
+                    devDeets, locations_settings, catch_all
+                )
+                # Finally we update the settings of the manual site separation
+                updateAttribute_v4_3(ipf, list_devices_sites_to_push)
+                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+            else:
+                # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
+                list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
 
-            # Finally we update the settings of the manual site separation
-            updateManualSiteSeparation(ipf, list_devices_sites_to_push)
-            # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+                list_devices_sites_to_push = getDevicesSnSiteId(
+                    devDeets, list_devices_sitesID
+                )
+
+                # Finally we update the settings of the manual site separation
+                updateManualSiteSeparation(ipf, list_devices_sites_to_push)
+                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
 
