@@ -39,8 +39,8 @@ from modules.snow import fetchSNowDevicesLoc
 
 # ServiceNow variables
 sNowServer = "dev103869.service-now.com/"
-sNowUser = "ipfabric"
-sNowPass = "IPFabric01!"
+sNowUser = "admin"
+sNowPass = "Secr3tP4ssw0rd"
 
 # IP Fabric variables
 IPFServer = "https://ipfabric.server"
