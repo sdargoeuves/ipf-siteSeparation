@@ -1,4 +1,10 @@
 """
+Version 1.3.1 - 2022/03/01
+Minor updates, comments and testing around attributes
+
+Version 1.3.0 - 2022/02/28
+Script updated to take into account v4.3 and the attribute. This won't affect previous version of IP Fabric.
+
 Version 1.2 - 2021/12/14
 NOW USING: pip install ipfabric
 
@@ -37,8 +43,14 @@ from modules.regexRules import (
 # Or ServiceNow
 from modules.snow import fetchSNowDevicesLoc
 
+# string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
+CATCH_ALL = "_catch_all_"
+# define the number of hostname per line in the Site Separation Rules
+MAX_DEVICES_PER_RULE = 20
+
+
 # ServiceNow variables
-sNowServer = "dev103869.service-now.com/"
+sNowServer = "dev123456.service-now.com/"
 sNowUser = "admin"
 sNowPass = "Secr3tP4ssw0rd"
 
@@ -46,12 +58,15 @@ sNowPass = "Secr3tP4ssw0rd"
 IPFServer = "https://ipfabric.server"
 IPFToken = "token"
 working_snapshot = ""
-# string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
-catch_all = "_catch_all_"
-# define the number of hostname per line in the Site Separation Rules
-max_devices_per_rule = 20
 
-
+#'''
+## For testing
+from dotenv import load_dotenv
+import os
+load_dotenv(".env")
+IPFToken = os.getenv("IPFToken")
+IPFServer = os.getenv("IPFServer")
+#'''
 
 def main(
     source_file=None,
@@ -131,7 +146,7 @@ def main(
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(locations_settings, grex, max_devices_per_rule)
+            optimised_locations_settings = regexOptimisation(locations_settings, grex, MAX_DEVICES_PER_RULE)
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:
@@ -161,14 +176,14 @@ def main(
 
                 # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
                 list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
-                    devDeets, locations_settings, catch_all
+                    devDeets, locations_settings, CATCH_ALL
                 )
                 # Finally we update the settings of the manual site separation
                 updateAttribute_v4_3(ipf, list_devices_sites_to_push)
                 # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
             else:
                 # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
-                list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
+                list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
 
                 # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
                 list_devices_sites_to_push = getDevicesSnSiteId(

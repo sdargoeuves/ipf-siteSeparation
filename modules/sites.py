@@ -51,21 +51,21 @@ def updateManualSiteSeparation(ipf: IPFClient, list_devicesSn_sitesId: List):
 
 def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
     """
-    based on the locations_settings collected from SNow, or read via the input file
-    we will create the manual site separation to apply to the snapshot
+    based on the locations_settings collected from SNow, or from the input file
+    we will create the manual site separation --> Attribute!
     """
     # we load the list into a JSON
     json_devicesSn_sitesId = json.loads(list_devicesSn_siteName)
     for item in json_devicesSn_sitesId:
         item["name"] = "siteName"
-    # Creation of the request to push the manual site separation
+    # Creation of the request to push the Attributes for the SNAPSHOT
     url_local_attribute = "attributes/local"
     payload_local = {
         "attributes": json_devicesSn_sitesId,
         "snapshot": ipf.snapshot_id,
     }
     print(
-        f"##INFO## Attribute will be pushed for {len(json_devicesSn_sitesId)} devices"
+        f"##INFO## Local Attribute (snpashot) will be pushed for {len(json_devicesSn_sitesId)} devices"
     )
     push_attributes = ipf.put(url=url_local_attribute, json=payload_local, timeout=120)
     push_attributes.raise_for_status()
@@ -79,6 +79,7 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         push_attributes = ipf.put(url=url_global_attribute, json=payload_global, timeout=120)
         push_attributes.raise_for_status()
 
+        # Now we change the Global settings to take into account the attriebute / manual site sep
         url_site_sep_settings = "settings/site-separation"
         print(f"##INFO## Changing Global settings to use Manual Site Separation / Attribute...")
         get_site_settings = ipf.get(url=url_site_sep_settings)
@@ -89,6 +90,7 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         )
         push_site_settings.raise_for_status()
 
+        # and we change the local settings (snpashot) to take into account the attriebute / manual site sep
         url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
         print(f"##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute...")
         get_site_settings_snapshot = ipf.get(url=url_site_sep_settings_snapshot)
