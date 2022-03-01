@@ -34,7 +34,13 @@ from rich import print  # Optional
 # Module to interact with IP Fabric’s API
 from ipfabric import IPFClient
 from modules.readInput import readInput
-from modules.sites import getDevicesSnSiteId_v4_3, getSiteId, getDevicesSnSiteId, updateAttribute_v4_3, updateManualSiteSeparation
+from modules.sites import (
+    getDevicesSnSiteId_v4_3,
+    getSiteId,
+    getDevicesSnSiteId,
+    updateAttribute_v4_3,
+    updateManualSiteSeparation,
+)
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
@@ -63,10 +69,15 @@ working_snapshot = ""
 ## For testing
 from dotenv import load_dotenv
 import os
+
 load_dotenv(".env")
 IPFToken = os.getenv("IPFToken")
 IPFServer = os.getenv("IPFServer")
+sNowServer = os.getenv("sNowServer")
+sNowUser = os.getenv("sNowUser")
+sNowPass = os.getenv("sNowPass")
 #'''
+
 
 def main(
     source_file=None,
@@ -82,8 +93,19 @@ def main(
     Main function
     """
 
-    #List of required columns for the device inventory
-    inventory_devices_columns = ['hostname','siteName','loginIp','loginType','vendor','platform','family','version','sn','devType',]
+    # List of required columns for the device inventory
+    inventory_devices_columns = [
+        "hostname",
+        "siteName",
+        "loginIp",
+        "loginType",
+        "vendor",
+        "platform",
+        "family",
+        "version",
+        "sn",
+        "devType",
+    ]
 
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
@@ -146,7 +168,9 @@ def main(
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(locations_settings, grex, MAX_DEVICES_PER_RULE)
+            optimised_locations_settings = regexOptimisation(
+                locations_settings, grex, MAX_DEVICES_PER_RULE
+            )
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:
@@ -155,15 +179,15 @@ def main(
             # We can now push this into IP Fabric
             if "4.3." in ipf.os_version:
                 print("##ERR## Not yet supported for version >= 4.3.0")
-                #updateSnapshotSettings_v4_3(
+                # updateSnapshotSettings_v4_3(
                 #    ipf,
                 #    optimised_locations_settings,
                 #    exact_match,
                 #    reg_out,
                 #    keep_rules,
-                #)
+                # )
             else:
-                    updateSnapshotSettings(
+                updateSnapshotSettings(
                     ipf,
                     optimised_locations_settings,
                     exact_match,

@@ -76,14 +76,22 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         payload_global = {
             "attributes": json_devicesSn_sitesId,
         }
-        push_attributes = ipf.put(url=url_global_attribute, json=payload_global, timeout=120)
+        push_attributes = ipf.put(
+            url=url_global_attribute, json=payload_global, timeout=120
+        )
         push_attributes.raise_for_status()
 
         # Now we change the Global settings to take into account the attriebute / manual site sep
         url_site_sep_settings = "settings/site-separation"
-        print(f"##INFO## Changing Global settings to use Manual Site Separation / Attribute...")
+        print(
+            f"##INFO## Changing Global settings to use Manual Site Separation / Attribute..."
+        )
         get_site_settings = ipf.get(url=url_site_sep_settings)
-        site_sep_settings = {"manualEnabled":True,"neighborshipFallbackEnabled":True, "rules": get_site_settings.json()["rules"]}
+        site_sep_settings = {
+            "manualEnabled": True,
+            "neighborshipFallbackEnabled": True,
+            "rules": get_site_settings.json()["rules"],
+        }
 
         push_site_settings = ipf.put(
             url=url_site_sep_settings, json=site_sep_settings, timeout=120
@@ -92,11 +100,21 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
 
         # and we change the local settings (snpashot) to take into account the attriebute / manual site sep
         url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
-        print(f"##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute...")
+        print(
+            f"##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute..."
+        )
         get_site_settings_snapshot = ipf.get(url=url_site_sep_settings_snapshot)
-        site_sep_settings_snapshot = {"siteSeparation": {"manualEnabled":True,"neighborshipFallbackEnabled":True, "rules": get_site_settings_snapshot.json()["siteSeparation"]["rules"]}}
+        site_sep_settings_snapshot = {
+            "siteSeparation": {
+                "manualEnabled": True,
+                "neighborshipFallbackEnabled": True,
+                "rules": get_site_settings_snapshot.json()["siteSeparation"]["rules"],
+            }
+        }
         push_site_settings_snapshot = ipf.patch(
-            url=url_site_sep_settings_snapshot, json=site_sep_settings_snapshot, timeout=120
+            url=url_site_sep_settings_snapshot,
+            json=site_sep_settings_snapshot,
+            timeout=120,
         )
 
         if not push_site_settings.is_error:
@@ -222,8 +240,9 @@ def getDevicesSnSiteId(ipf_devices, list_devices_sitesID):
     return merge_list.to_json(orient="records")
 
 
-
-def getDevicesSnSiteId_v4_3(ipf_devices: List, locations_settings: List, catch_all: str):
+def getDevicesSnSiteId_v4_3(
+    ipf_devices: List, locations_settings: List, catch_all: str
+):
 
     # As we need the SN to push the data into the manual site separation, we're going to repeat the merge
     # with the devDeets this time
@@ -253,9 +272,7 @@ def getDevicesSnSiteId_v4_3(ipf_devices: List, locations_settings: List, catch_a
         {"hostname": "hostname", "location": "value"}, axis=1
     )
     # We now merge the list of devices from IP Fabric, with the list of Sites and their ID
-    merge_list = pd.merge(
-        df_ipf_devices, locations_name, on="hostname", how="left"
-    )
+    merge_list = pd.merge(df_ipf_devices, locations_name, on="hostname", how="left")
     # the _catch_all_ sites need to be filled for any sites not from the source file
     # the last entry from that list is the catch all site
     merge_list.value.fillna(catch_all, inplace=True)
