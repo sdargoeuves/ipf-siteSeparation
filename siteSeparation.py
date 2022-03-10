@@ -22,8 +22,8 @@ or
 > python3 siteSeparation.py -snow
 or to create Site Separation Rules:
 > python3 siteSeparation.py -f source_file -u
-
 """
+
 # import
 import sys
 import json
@@ -64,20 +64,31 @@ sNowPass = "Secr3tP4ssw0rd"
 IPFServer = "https://ipfabric.server"
 IPFToken = "token"
 working_snapshot = ""
+IPFVerify = True
+
 
 #'''
-## For testing
+##### TESTS #####################################
 from dotenv import load_dotenv
 import os
 
 load_dotenv(".env")
 IPFToken = os.getenv("IPFToken")
 IPFServer = os.getenv("IPFServer")
+IPFVerify = False
 sNowServer = os.getenv("sNowServer")
 sNowUser = os.getenv("sNowUser")
 sNowPass = os.getenv("sNowPass")
+source_file = open("demolab.csv")
+generate_only = False
+servicenow=False
+upper_match=False
+exact_match=False
+grex=False
+reg_out=False
+keep_rules=False
+##### END OF TESTS ##############################
 #'''
-
 
 def main(
     source_file=None,
@@ -133,7 +144,7 @@ def main(
     if servicenow:
         print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
         ipf = IPFClient(
-            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
         )
         devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
@@ -162,7 +173,7 @@ def main(
             ipf, devDeets
         except NameError:
             ipf = IPFClient(
-                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
             )
             devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         # Site Separation using RULES - not the recommended way

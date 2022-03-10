@@ -65,7 +65,7 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         "snapshot": ipf.snapshot_id,
     }
     print(
-        f"##INFO## Local Attribute (snpashot) will be pushed for {len(json_devicesSn_sitesId)} devices"
+        f"##INFO## Local Attribute (snpashot) table will be updated with {len(json_devicesSn_sitesId)} devices"
     )
     push_attributes = ipf.put(url=url_local_attribute, json=payload_local, timeout=120)
     push_attributes.raise_for_status()
@@ -76,27 +76,30 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         payload_global = {
             "attributes": json_devicesSn_sitesId,
         }
+        print(f"##INFO## ... and now the Global Attribute table...")
         push_attributes = ipf.put(
             url=url_global_attribute, json=payload_global, timeout=120
         )
         push_attributes.raise_for_status()
 
-        # Now we change the Global settings to take into account the attriebute / manual site sep
+        # Now we change the Global settings to take into account the attribute / manual site sep
         url_site_sep_settings = "settings/site-separation"
         print(
             f"##INFO## Changing Global settings to use Manual Site Separation / Attribute..."
         )
         get_site_settings = ipf.get(url=url_site_sep_settings)
-        site_sep_settings = {
-            "manualEnabled": True,
-            "neighborshipFallbackEnabled": True,
-            "rules": get_site_settings.json()["rules"],
-        }
+        if get_site_settings.status_code == 200:
+            site_sep_settings = {
+                "manualEnabled": True,
+                "neighborshipFallbackEnabled": True,
+                "rules": get_site_settings.json()["rules"],
+            }
+            push_site_settings = ipf.put(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+            push_site_settings.raise_for_status()
+        else:
+            print(f"##ERR## Could not read the Site settings: {get_site_settings.json()}")
 
-        push_site_settings = ipf.put(
-            url=url_site_sep_settings, json=site_sep_settings, timeout=120
-        )
-        push_site_settings.raise_for_status()
+
 
         # and we change the local settings (snpashot) to take into account the attriebute / manual site sep
         url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
