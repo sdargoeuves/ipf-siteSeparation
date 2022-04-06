@@ -1,4 +1,9 @@
 """
+Version 1.3.2 - 2022/04/06
+This script only support IP Fabric version >= v4.0
+Update on Managing IP Fabric v4.3+
+Rules creation has not yet been added for version >= 4.3
+
 Version 1.3.1 - 2022/03/01
 Minor updates, comments and testing around attributes
 
@@ -64,31 +69,7 @@ sNowPass = "Secr3tP4ssw0rd"
 IPFServer = "https://ipfabric.server"
 IPFToken = "token"
 working_snapshot = ""
-IPFVerify = True
-
-
-#'''
-##### TESTS #####################################
-from dotenv import load_dotenv
-import os
-
-load_dotenv(".env")
-IPFToken = os.getenv("IPFToken")
-IPFServer = os.getenv("IPFServer")
-IPFVerify = False
-sNowServer = os.getenv("sNowServer")
-sNowUser = os.getenv("sNowUser")
-sNowPass = os.getenv("sNowPass")
-source_file = open("demolab.csv")
-generate_only = False
-servicenow=False
-upper_match=False
-exact_match=False
-grex=False
-reg_out=False
-keep_rules=False
-##### END OF TESTS ##############################
-#'''
+IPFVerify = True #SSL verification
 
 def main(
     source_file=None,
@@ -188,16 +169,7 @@ def main(
                 print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
             # We can now push this into IP Fabric
-            if "4.3." in ipf.os_version:
-                print("##ERR## Not yet supported for version >= 4.3.0")
-                # updateSnapshotSettings_v4_3(
-                #    ipf,
-                #    optimised_locations_settings,
-                #    exact_match,
-                #    reg_out,
-                #    keep_rules,
-                # )
-            else:
+            if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
                 updateSnapshotSettings(
                     ipf,
                     optimised_locations_settings,
@@ -205,18 +177,19 @@ def main(
                     reg_out,
                     keep_rules,
                 )
+            else:
+                print("##ERR## this option is not yet supported on v4.3+")
+                #updateSnapshotSettings_v4_3(
+                #    ipf,
+                #    optimised_locations_settings,
+                #    exact_match,
+                #    reg_out,
+                #    keep_rules,
+                #)
+
         # Site Separation using Manual Site Separation - the recommended way
         else:
-            if "4.3." in ipf.os_version:
-
-                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
-                list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
-                    devDeets, locations_settings, CATCH_ALL
-                )
-                # Finally we update the settings of the manual site separation
-                updateAttribute_v4_3(ipf, list_devices_sites_to_push)
-                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
-            else:
+            if ipf.os_version[:3] in ["3.8", "4.0", "4.1", "4.2"]:
                 # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
                 list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
 
@@ -227,6 +200,15 @@ def main(
 
                 # Finally we update the settings of the manual site separation
                 updateManualSiteSeparation(ipf, list_devices_sites_to_push)
+                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+
+            else:
+                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+                list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
+                    devDeets, locations_settings, CATCH_ALL
+                )
+                # Finally we update the settings of the manual site separation
+                updateAttribute_v4_3(ipf, list_devices_sites_to_push)
                 # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
