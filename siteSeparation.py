@@ -1,5 +1,17 @@
 """
-Version 1.1 - 2021/12/02
+Version 1.3.2 - 2022/04/06
+This script only support IP Fabric version >= v4.0
+Update on Managing IP Fabric v4.3+
+Rules creation has not yet been added for version >= 4.3
+
+Version 1.3.1 - 2022/03/01
+Minor updates, comments and testing around attributes
+
+Version 1.3.0 - 2022/02/28
+Script updated to take into account v4.3 and the attribute. This won't affect previous version of IP Fabric.
+
+Version 1.2 - 2021/12/14
+NOW USING: pip install ipfabric
 
 - Site Separation script -
 This script will allow you to use an external source to change the Site Separation of IP Fabric.
@@ -15,18 +27,25 @@ or
 > python3 siteSeparation.py -snow
 or to create Site Separation Rules:
 > python3 siteSeparation.py -f source_file -u
-
 """
+
+# import
 import sys
 import json
 import argparse
 from datetime import datetime
-# from rich import print  # Optional
+from rich import print  # Optional
 
 # Module to interact with IP Fabric’s API
-from api.ipf_api_client import IPFClient
+from ipfabric import IPFClient
 from modules.readInput import readInput
-from modules.sites import getSiteId, getDevicesSnSiteId, updateManualSiteSeparation
+from modules.sites import (
+    getDevicesSnSiteId_v4_3,
+    getSiteId,
+    getDevicesSnSiteId,
+    updateAttribute_v4_3,
+    updateManualSiteSeparation,
+)
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
@@ -35,19 +54,46 @@ from modules.regexRules import (
 # Or ServiceNow
 from modules.snow import fetchSNowDevicesLoc
 
+# string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
+CATCH_ALL = "_catch_all_"
+# define the number of hostname per line in the Site Separation Rules
+MAX_DEVICES_PER_RULE = 20
+
+
 # ServiceNow variables
-sNowServer = ""
-sNowUser = ""
-sNowPass = ""
+sNowServer = "dev123456.service-now.com/"
+sNowUser = "admin"
+sNowPass = "Secr3tP4ssw0rd"
 
 # IP Fabric variables
-IPFServer = "https://server.ipfabric.local"
-IPFToken = ""
-working_snapshot = ""  # can be $last, $prev, $lastLocked or ID, if not specified, the last snapshot will be used
-# string to use for the catch all sites, all /devices in IP Fabric which are not linked to any sites from the source
-catch_all = "_catch_all_"
-# define the number of hostname per line in the Site Separation Rules
-max_devices_per_rule = 20
+IPFServer = "https://ipfabric.server"
+IPFToken = "token"
+working_snapshot = ""
+IPFVerify = True # SSL Verification
+
+'''
+##### TESTS #####################################
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+IPFToken = os.getenv("IPFToken")
+IPFServer = os.getenv("IPFServer")
+IPFVerify = False
+sNowServer = os.getenv("sNowServer")
+sNowUser = os.getenv("sNowUser")
+sNowPass = os.getenv("sNowPass")
+source_file = open("demolab.csv")
+generate_only = False
+servicenow=False
+upper_match=False
+exact_match=False
+grex=False
+reg_out=False
+keep_rules=False
+##### END OF TESTS ##############################
+#'''
 
 def main(
     source_file=None,
@@ -62,6 +108,21 @@ def main(
     """
     Main function
     """
+
+    # List of required columns for the device inventory
+    inventory_devices_columns = [
+        "hostname",
+        "siteName",
+        "loginIp",
+        "loginType",
+        "vendor",
+        "platform",
+        "family",
+        "version",
+        "sn",
+        "devType",
+    ]
+
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
         sys.exit(
@@ -88,9 +149,9 @@ def main(
     if servicenow:
         print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
         ipf = IPFClient(
-            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
         )
-        devDeets = ipf.device_list()
+        devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
@@ -117,39 +178,62 @@ def main(
             ipf, devDeets
         except NameError:
             ipf = IPFClient(
-                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot
+                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
             )
-            devDeets = ipf.device_list()
+            devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(locations_settings, grex, max_devices_per_rule)
+            optimised_locations_settings = regexOptimisation(
+                locations_settings, grex, MAX_DEVICES_PER_RULE
+            )
             if exact_match:
                 print(f"##INFO## Exact match Regex rules will be created\t\t")
             else:
                 print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
             # We can now push this into IP Fabric
-            updateSnapshotSettings(
-                ipf,
-                optimised_locations_settings,
-                exact_match,
-                reg_out,
-                keep_rules,
-            )
+            if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
+                updateSnapshotSettings(
+                    ipf,
+                    optimised_locations_settings,
+                    exact_match,
+                    reg_out,
+                    keep_rules,
+                )
+            else:
+                print("##ERR## this option is not yet supported on v4.3+")
+                #updateSnapshotSettings_v4_3(
+                #    ipf,
+                #    optimised_locations_settings,
+                #    exact_match,
+                #    reg_out,
+                #    keep_rules,
+                #)
+
         # Site Separation using Manual Site Separation - the recommended way
         else:
-            # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
-            list_devices_sitesID = getSiteId(ipf, locations_settings, catch_all)
+            if ipf.os_version[:3] in ["3.8", "4.0", "4.1", "4.2"]:
+                # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
+                list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
 
-            # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
-            list_devices_sites_to_push = getDevicesSnSiteId(
-                devDeets, list_devices_sitesID
-            )
+                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+                list_devices_sites_to_push = getDevicesSnSiteId(
+                    devDeets, list_devices_sitesID
+                )
 
-            # Finally we update the settings of the manual site separation
-            updateManualSiteSeparation(ipf, list_devices_sites_to_push)
-            # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+                # Finally we update the settings of the manual site separation
+                updateManualSiteSeparation(ipf, list_devices_sites_to_push)
+                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+
+            else:
+                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+                list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
+                    devDeets, locations_settings, CATCH_ALL
+                )
+                # Finally we update the settings of the manual site separation
+                updateAttribute_v4_3(ipf, list_devices_sites_to_push)
+                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
 

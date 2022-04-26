@@ -1,12 +1,18 @@
 # siteSeparation.py
 This script will allow you to use an external source to change the Site Separation of IP Fabric.
-To do so, the script will use **Manual Site Separation**, which is the recommended way to update the settings.
-*The option to generate rules based on hostname is also available, but not recommended.*
+To do so, the script will use **Manual Site Separation**.
+*The option to generate rules based on hostname is also available*
 
+Since IP Fabric v4.3, the manual site separation is using **Device Attributes**.
+The script will update the relevant settings depending on your version.
+>With IP Fabric >=4.3  only Manual Site Separation / Attribute update is available, rules creation will be added at a later stage.
 
-## API folder
-contains the IP Fabric API client - Github page: [api_client_ipf]
+## How to install
 
+***Install ipfabric Python module and dependencies***
+```sh
+pip install -r requirements.txt
+```
 
 ## How to use
 
@@ -29,8 +35,9 @@ Find the required library in order for this script to work
 
 | Library | Description |
 | ------ | ------ |
+| ipfabric | Mandatory - [IP Fabric python module][ipfabric-python] |
 | httpx | Mandatory - HTTP client |
-| pandas | Mandatory - Data Analysis |
+| pandas  | Mandatory - Data Analysis |
 | *openpyxl* | *Optional - only needed to support XLSX file* |
 | *xlrd* | *Optional - only needed to support XLS file* |
 | *rich* | *Optional - Enhance terminal formatting* |
@@ -57,7 +64,7 @@ Script will collect for each device in IP Fabric the location in ServiceNow and 
 use to only generate a new host/site JSON file from SNow. This won't update IP Fabric
 
 *Group for Rules creation:*
-*This is not the recommended method to update Site Separation, use with caution*
+*This is not the recommended method to update Site Separation*
 
 - *-u, --upper_match*
 
@@ -84,6 +91,6 @@ MIT
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
-   [api_client_ipf]: <https://github.com/community-fabric/integration-demos/tree/main/api_clients/ipf>
+   [ipfabric-python]: <https://github.com/community-fabric/python-ipfabric>
    [grex_github]: <https://github.com/pemistahl/grex>
    [grex_install]:<https://github.com/pemistahl/grex#how-to-install>

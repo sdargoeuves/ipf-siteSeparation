@@ -1,4 +1,5 @@
 import httpx
+from rich import print
 
 """
 This module will allow you to collect ServiceNow location for the devices in IP Fabric
@@ -40,6 +41,7 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
             devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders, timeout=120
         )
         sNowDevices = sNowDevices_raw.json()["result"]
+        print(f"##INFO## {len(sNowDevices)} devices found in ServiceNow")
     except Exception as exc:
         print(f"##WARNING## Type of error: {type(exc)}")
         print(f"##WARNING## Message: {exc.args}")
@@ -65,10 +67,14 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
                 "display_value"
             ]
             print(
-                f' Got the device [green]{dev["hostname"]}[/green] in {device_loc} - sys_id: {device_sys}\t\t',
+                f" Got the device [green]{dev['hostname']}[/green] in {device_loc} - sys_id: {device_sys}\t\t",
                 end="\r",
             )
         except:
+            print(
+                f" No location found for [red]{dev['hostname']}[/red] - sys_id: {device_sys}\t\t",
+                end="\r",
+            )
             device_loc = "NOT IN SNOW"
 
         devices_loc.append(
