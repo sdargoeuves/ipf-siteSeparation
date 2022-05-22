@@ -49,6 +49,7 @@ from modules.sites import (
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
+    updateSnapshotSettings_v4_3
 )
 
 # Or ServiceNow
@@ -69,7 +70,32 @@ sNowPass = "Secr3tP4ssw0rd"
 IPFServer = "https://ipfabric.server"
 IPFToken = "token"
 working_snapshot = ""
-IPFVerify = True #SSL verification
+IPFVerify = True # SSL Verification
+
+'''
+##### TESTS #####################################
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+IPFToken = os.getenv("IPFToken")
+IPFServer = os.getenv("IPFServer")
+IPFVerify = False
+''###
+sNowServer = os.getenv("sNowServer")
+sNowUser = os.getenv("sNowUser")
+sNowPass = os.getenv("sNowPass")
+source_file = open("l66-test-sitesep.csv")
+generate_only = False
+servicenow=False
+upper_match=False
+exact_match=False
+grex=False
+reg_out=False
+keep_rules=False
+##### END OF TESTS ##############################
+#'''
 
 def main(
     source_file=None,
@@ -179,13 +205,13 @@ def main(
                 )
             else:
                 print("##ERR## this option is not yet supported on v4.3+")
-                #updateSnapshotSettings_v4_3(
-                #    ipf,
-                #    optimised_locations_settings,
-                #    exact_match,
-                #    reg_out,
-                #    keep_rules,
-                #)
+                updateSnapshotSettings_v4_3(
+                    ipf,
+                    optimised_locations_settings,
+                    exact_match,
+                    reg_out,
+                    keep_rules,
+                )
 
         # Site Separation using Manual Site Separation - the recommended way
         else:

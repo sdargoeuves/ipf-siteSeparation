@@ -8,6 +8,8 @@ from datetime import datetime
 import json
 import pandas as pd
 
+import ipdb
+
 # from api.ipf_api_client import IPFClient
 from ipfabric import IPFClient
 
@@ -279,17 +281,8 @@ def updateSnapshotSettings_v4_3(
     new_settings = {
         "siteSeparation": {
             "manualEnabled": False,
-            "neighborshipFallbackEnabled": True,
-            "rules": [
-                {
-                    "id": "468eca77-d66b-428d-b1db-6d96d112b45f",
-                    "note": "^L33R[79]$ >> L33",
-                    "regex": "^L33R[79]$",
-                    "siteName": "L33",
-                    "transformation": "none",
-                    "type": "regexHostname",
-                }
-            ],
+            "neighborshipFallbackEnabled": False,
+            "rules": [],
         }
     }
     create_catch_all_rule = True
@@ -298,6 +291,7 @@ def updateSnapshotSettings_v4_3(
         for loc_setting in locations_settings:
             new_settings["siteSeparation"]["rules"].append(
                 {
+                    "id": "",
                     "note": " >> ".join(
                         [loc_setting["hostname"], loc_setting["location"]]
                     ),
@@ -312,6 +306,7 @@ def updateSnapshotSettings_v4_3(
             try:
                 new_settings["siteSeparation"]["rules"].append(
                     {
+                        "id": "",
                         "note": " >> ".join(
                             [loc_setting["hostname"], loc_setting["location"]]
                         ),
@@ -366,6 +361,7 @@ def updateSnapshotSettings_v4_3(
     if create_catch_all_rule:
         new_settings["siteSeparation"]["rules"].append(
             {
+                "id": "",
                 "note": "Catch ALL",
                 "regex": ".*",
                 "siteName": "_catch_all_",
@@ -375,6 +371,7 @@ def updateSnapshotSettings_v4_3(
         )
     # We update the site separation rules on IP Fabric for that snapshot
     pushSettings = ipf.patch(url=snapSettingsEndpoint, json=new_settings, timeout=120)
+    ipdb.set_trace()
     if pushSettings.is_error:
         print(
             f"  --> API PATCH Error - Unable to PATCH data for endpoint: {pushSettings.request}\n      No update done on IP Fabric"
