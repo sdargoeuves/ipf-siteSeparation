@@ -94,12 +94,14 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
                 "neighborshipFallbackEnabled": True,
                 "rules": get_site_settings.json()["rules"],
             }
-            push_site_settings = ipf.put(url=url_site_sep_settings, json=site_sep_settings, timeout=120)
+            push_site_settings = ipf.put(
+                url=url_site_sep_settings, json=site_sep_settings, timeout=120
+            )
             push_site_settings.raise_for_status()
         else:
-            print(f"##ERR## Could not read the Site settings: {get_site_settings.json()}")
-
-
+            print(
+                f"##ERR## Could not read the Site settings: {get_site_settings.json()}"
+            )
 
         # and we change the local settings (snpashot) to take into account the attriebute / manual site sep
         url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
