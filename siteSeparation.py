@@ -1,4 +1,7 @@
 """
+Version 1.4.0 - 2022/05/22
+Rules creation is now allowed for version v4.3+ but /!\ NOT RECOMMENDED /!\ 
+
 Version 1.3.2 - 2022/04/06
 This script only support IP Fabric version >= v4.0
 Update on Managing IP Fabric v4.3+
@@ -49,6 +52,7 @@ from modules.sites import (
 from modules.regexRules import (
     regexOptimisation,
     updateSnapshotSettings,
+    updateSnapshotSettings_v4_3,
 )
 
 # Or ServiceNow
@@ -69,7 +73,34 @@ sNowPass = "Secr3tP4ssw0rd"
 IPFServer = "https://ipfabric.server"
 IPFToken = "token"
 working_snapshot = ""
-IPFVerify = True #SSL verification
+IPFVerify = True  # SSL Verification
+
+#'''
+##### TESTS #####################################
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+IPFToken = os.getenv("IPFToken")
+IPFServer = os.getenv("IPFServer")
+IPFVerify = False
+#'''
+"""
+sNowServer = os.getenv("sNowServer")
+sNowUser = os.getenv("sNowUser")
+sNowPass = os.getenv("sNowPass")
+source_file = open("l66-test-sitesep.csv")
+generate_only = False
+servicenow=False
+upper_match=False
+exact_match=False
+grex=False
+reg_out=False
+keep_rules=False
+##### END OF TESTS ##############################
+#"""
+
 
 def main(
     source_file=None,
@@ -125,7 +156,10 @@ def main(
     if servicenow:
         print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
         ipf = IPFClient(
-            base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
+            base_url=IPFServer,
+            token=IPFToken,
+            snapshot_id=working_snapshot,
+            verify=IPFVerify,
         )
         devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
@@ -154,38 +188,50 @@ def main(
             ipf, devDeets
         except NameError:
             ipf = IPFClient(
-                base_url=IPFServer, token=IPFToken, snapshot_id=working_snapshot, verify=IPFVerify
+                base_url=IPFServer,
+                token=IPFToken,
+                snapshot_id=working_snapshot,
+                verify=IPFVerify,
             )
             devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
-            # Before pushing the data to IP Fabric we want to optimise the rules
-            optimised_locations_settings = regexOptimisation(
-                locations_settings, grex, MAX_DEVICES_PER_RULE
+            print(
+                f"##WARNING## You are about to create rules for Site Separation. We strongly recommend using 'Device Attributes' instead...\t\t"
             )
-            if exact_match:
-                print(f"##INFO## Exact match Regex rules will be created\t\t")
-            else:
-                print(f"##INFO## Uppercase Regex rules will be created\t\t")
-
-            # We can now push this into IP Fabric
-            if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
-                updateSnapshotSettings(
-                    ipf,
-                    optimised_locations_settings,
-                    exact_match,
-                    reg_out,
-                    keep_rules,
+            confirm = input(f"----> Are you sure you want to proceed? y/[n]: ")
+            if confirm.lower() == "y":
+                # Before pushing the data to IP Fabric we want to optimise the rules
+                optimised_locations_settings = regexOptimisation(
+                    locations_settings, grex, MAX_DEVICES_PER_RULE
                 )
+                if exact_match:
+                    print(f"##INFO## Exact match Regex rules will be created\t\t")
+                else:
+                    print(f"##INFO## Uppercase Regex rules will be created\t\t")
+
+                # We can now push this into IP Fabric
+                if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
+                    updateSnapshotSettings(
+                        ipf,
+                        optimised_locations_settings,
+                        exact_match,
+                        reg_out,
+                        keep_rules,
+                    )
+                else:
+                    print("##ERR## this option is not yet supported on v4.3+")
+                    updateSnapshotSettings_v4_3(
+                        ipf,
+                        optimised_locations_settings,
+                        exact_match,
+                        reg_out,
+                        keep_rules,
+                    )
             else:
-                print("##ERR## this option is not yet supported on v4.3+")
-                #updateSnapshotSettings_v4_3(
-                #    ipf,
-                #    optimised_locations_settings,
-                #    exact_match,
-                #    reg_out,
-                #    keep_rules,
-                #)
+                sys.exit(
+                    "##INFO## Run the script without the -u or -e or -grex options"
+                )
 
         # Site Separation using Manual Site Separation - the recommended way
         else:
