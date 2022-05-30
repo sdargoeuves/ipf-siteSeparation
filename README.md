@@ -20,11 +20,11 @@ pip install -r requirements.txt
 ```sh
 python3 siteSeparation.py -snow
 ```
-***to use a source file to update Manual Site Separation***
+***to use a source file to update Manual Site Separation / Device Attributes***
 ```sh
 python3 siteSeparation.py -f source_file.xlsx 
 ```
-***to use a source file to create Site Rules***
+***to use a source file to create Site Rules -- NOT RECOMMENDED***
 ```sh
 python3 siteSeparation.py -f source_file.csv --upper_match
 ```
