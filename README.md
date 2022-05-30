@@ -1,11 +1,11 @@
 # siteSeparation.py
-This script will allow you to use an external source to change the Site Separation of IP Fabric.
+This script will allow you to use an external source to change the Site Separation settings of IP Fabric.
 To do so, the script will use **Manual Site Separation**.
 *The option to generate rules based on hostname is also available*
 
 Since IP Fabric v4.3, the manual site separation is using **Device Attributes**.
 The script will update the relevant settings depending on your version.
->With IP Fabric >=4.3  only Manual Site Separation / Attribute update is available, rules creation will be added at a later stage.
+>With IP Fabric >=4.3, rules creation is still available, but not recommended.
 
 ## How to install
 
@@ -55,7 +55,7 @@ There is an option to generate *regex* based on the hostnames, instead of just u
 
 - -f source_file, --file source_file
 
-Source file, as a JSON/CSV/XLS/XLSX file containing hostname/site information
+Source file, as a JSON/CSV/XLS/XLSX file containing hostname/site information. The hostname must match IP Fabric hostname.
 - -snow, --servicenow
 
 Script will collect for each device in IP Fabric the location in ServiceNow and store this as JSON
