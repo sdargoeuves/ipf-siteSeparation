@@ -1,6 +1,3 @@
-import httpx
-from rich import print
-
 """
 This module will allow you to collect ServiceNow location for the devices in IP Fabric
 
@@ -21,58 +18,68 @@ Returns a list of dict:
         ]
 """
 
+import httpx
+from rich import print
+
+SNOW_HEADERS = {
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+}
+
+def fetchLocationName(sNowDevice, sNowLocations):
+    
+    location_name = "Location Not Set in SNOW"
+    try:
+        device_loc_raw = dict(sNowDevice["location"])
+        for location in sNowLocations:
+            device_loc_id = device_loc_raw.get("value", "")
+            if location["sys_id"] == device_loc_id:
+                location_name = location["name"]
+    except Exception as exc:
+        location_name = "ERR - Not in SNOW"
+    return location_name
 
 def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     """
     Function to collect data from SNow and return the JSON containing hostname and site location
     """
-    snow_ok = True
     devices_loc = []
+    
     devicesEndpoint = (
-        "https://" + sNowServer + "/api/now/v1/cmdb/instance/cmdb_ci_netgear"
+        "https://" + sNowServer + "/api/now/table/cmdb_ci_netgear"
     )
-    sNowHeaders = {
-        "Connection": "keep-alive",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
+    locationsEndpoint = (
+        "https://" + sNowServer + "/api/now/table/cmn_location"
+    )
     try:
         sNowDevices_raw = httpx.get(
-            devicesEndpoint, auth=(sNowUser, sNowPass), headers=sNowHeaders, timeout=120
+            devicesEndpoint, auth=(sNowUser, sNowPass), headers=SNOW_HEADERS, timeout=120
         )
         sNowDevices = sNowDevices_raw.json()["result"]
+        sNowLocations_raw = httpx.get(
+            locationsEndpoint, auth=(sNowUser, sNowPass), headers=SNOW_HEADERS, timeout=120
+        )
+        sNowLocations = sNowLocations_raw.json()["result"]
         print(f"##INFO## {len(sNowDevices)} devices found in ServiceNow")
     except Exception as exc:
         print(f"##WARNING## Type of error: {type(exc)}")
         print(f"##WARNING## Message: {exc.args}")
         print("##WARNING## Can't process SNow data (server hibernation...)")
-        snow_ok = False
+
+    print(f"##INFO## Looking for Device's locations...")
     for dev in ipfDevs:
         # get device sys_id
         try:
-            device_sys = ""
-            for sys in sNowDevices:
-                if dev["hostname"] == sys["name"]:
-                    device_sys = sys["sys_id"]
+            device_sys_id = ""
+            for sNowDevice in sNowDevices:
+                if dev["hostname"] == sNowDevice["name"]:
+                    device_sys_id = sNowDevice["sys_id"]
+                    device_loc = fetchLocationName(sNowDevice, sNowLocations)
                     break
-            # query the API for that device, and extract the location
-            deviceEndpoint = devicesEndpoint + "/" + device_sys
-            sNowDevice = httpx.get(
-                deviceEndpoint,
-                auth=(sNowUser, sNowPass),
-                headers=sNowHeaders,
-                timeout=120,
-            )
-            device_loc = sNowDevice.json()["result"]["attributes"]["location"][
-                "display_value"
-            ]
-            print(
-                f" Got the device [green]{dev['hostname']}[/green] in {device_loc} - sys_id: {device_sys}\t\t",
-                end="\r",
-            )
         except:
             print(
-                f" No location found for [red]{dev['hostname']}[/red] - sys_id: {device_sys}\t\t",
+                f" No location found for [red]{dev['hostname']}[/red] - sys_id: {device_sys_id}\t\t\t\t\t\t\t\t",
                 end="\r",
             )
             device_loc = "NOT IN SNOW"
@@ -83,8 +90,5 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
                 "location": device_loc,
             }
         )
-    if snow_ok:
-        print(f"##INFO## info on IPF devices collected from SNow")
-    else:
-        print(f"##WARNING## Issue with the collection from SNow")
+    
     return devices_loc
