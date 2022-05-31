@@ -21,15 +21,12 @@ Returns a list of dict:
 import httpx
 from rich import print
 
-SNOW_HEADERS = {
-    "Connection": "keep-alive",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-}
 
 def fetchLocationName(sNowDevice, sNowLocations):
-    
-    location_name = "Location Not Set in SNOW"
+    """
+    Take the dictionary for a cmdb_ci_netgear, find the location ID, and extract the location Name from sNowLocations
+    """
+    location_name = "Location not set in SNOW"
     try:
         device_loc_raw = dict(sNowDevice["location"])
         for location in sNowLocations:
@@ -40,26 +37,18 @@ def fetchLocationName(sNowDevice, sNowLocations):
         location_name = "ERR - Not in SNOW"
     return location_name
 
-def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
+def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
     """
     Function to collect data from SNow and return the JSON containing hostname and site location
     """
     devices_loc = []
     
-    devicesEndpoint = (
-        "https://" + sNowServer + "/api/now/table/cmdb_ci_netgear"
-    )
-    locationsEndpoint = (
-        "https://" + sNowServer + "/api/now/table/cmn_location"
-    )
+    devicesEndpoint = "table/cmdb_ci_netgear"
+    locationsEndpoint = "table/cmn_location"
     try:
-        sNowDevices_raw = httpx.get(
-            devicesEndpoint, auth=(sNowUser, sNowPass), headers=SNOW_HEADERS, timeout=120
-        )
+        sNowDevices_raw = snow_api.get(devicesEndpoint)
         sNowDevices = sNowDevices_raw.json()["result"]
-        sNowLocations_raw = httpx.get(
-            locationsEndpoint, auth=(sNowUser, sNowPass), headers=SNOW_HEADERS, timeout=120
-        )
+        sNowLocations_raw = snow_api.get(locationsEndpoint)
         sNowLocations = sNowLocations_raw.json()["result"]
         print(f"##INFO## {len(sNowDevices)} devices found in ServiceNow")
     except Exception as exc:
@@ -77,6 +66,8 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
                     device_sys_id = sNowDevice["sys_id"]
                     device_loc = fetchLocationName(sNowDevice, sNowLocations)
                     break
+                else:
+                    device_loc = "Device not found in SNOW"
         except:
             print(
                 f" No location found for [red]{dev['hostname']}[/red] - sys_id: {device_sys_id}\t\t\t\t\t\t\t\t",
