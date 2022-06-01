@@ -33,16 +33,18 @@ def fetchLocationName(sNowDevice, sNowLocations):
             device_loc_id = device_loc_raw.get("value", "")
             if location["sys_id"] == device_loc_id:
                 location_name = location["name"]
+                break
     except Exception as exc:
-        location_name = "ERR - Not in SNOW"
+        location_name = "ERR - Fetching location - Not in SNOW"
     return location_name
+
 
 def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
     """
     Function to collect data from SNow and return the JSON containing hostname and site location
     """
     devices_loc = []
-    
+
     devicesEndpoint = "table/cmdb_ci_netgear"
     locationsEndpoint = "table/cmn_location"
     try:
@@ -56,9 +58,8 @@ def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
         print(f"##WARNING## Message: {exc.args}")
         print("##WARNING## Can't process SNow data (server hibernation...)")
 
-    print(f"##INFO## Looking for Device's locations...")
+    print(f"##INFO## Looking for Device's location...")
     for dev in ipfDevs:
-        # get device sys_id
         try:
             device_sys_id = ""
             for sNowDevice in sNowDevices:
@@ -66,14 +67,10 @@ def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
                     device_sys_id = sNowDevice["sys_id"]
                     device_loc = fetchLocationName(sNowDevice, sNowLocations)
                     break
-                else:
-                    device_loc = "Device not found in SNOW"
+            if device_sys_id == "":
+                device_loc = "Device not found in SNOW"
         except:
-            print(
-                f" No location found for [red]{dev['hostname']}[/red] - sys_id: {device_sys_id}\t\t\t\t\t\t\t\t",
-                end="\r",
-            )
-            device_loc = "NOT IN SNOW"
+            device_loc = "ERR - Not in SNOW"
 
         devices_loc.append(
             {
@@ -81,5 +78,5 @@ def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
                 "location": device_loc,
             }
         )
-    
+
     return devices_loc

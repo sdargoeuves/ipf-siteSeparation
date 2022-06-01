@@ -84,6 +84,7 @@ IPF_SNAPSHOT = ""
 IPF_SSL = True  # SSL Verification
 
 
+
 def main(
     source_file=None,
     servicenow=False,
@@ -170,7 +171,7 @@ def main(
             print(
                 f"##WARNING## You are about to create rules for Site Separation. We strongly recommend using 'Device Attributes' instead...\t\t"
             )
-            confirm = input(f"----> Are you sure you want to proceed? y/[n]: ")
+            confirm = input(f"----> Are you sure you want to proceed (y/[n])? ")
             if confirm.lower() == "y":
                 # Before pushing the data to IP Fabric we want to optimise the rules
                 optimised_locations_settings = regexOptimisation(
