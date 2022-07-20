@@ -1,6 +1,7 @@
 """
-Versopm 1.4.1 - 2022/05/31
-Update with ServiceNow module, reading the location was not working.
+Version 1.5.0 - 2022/07/20
+Support for version 5.0 has been added.
+YOU NEED to use the ipfabric python sdk matching your IP Fabric version
 
 Version 1.4.0 - 2022/05/22
 Rules creation is now allowed for version v4.3+ but /!\ NOT RECOMMENDED /!\ 
@@ -39,7 +40,6 @@ or to create Site Separation Rules:
 import sys
 import json
 import argparse
-import httpx
 from datetime import datetime
 from rich import print  # Optional
 
@@ -69,20 +69,41 @@ MAX_DEVICES_PER_RULE = 20
 
 
 # ServiceNow variables
-SNOW_INSTANCE = "dev123456"
-SNOW_USER = "admin"
-SNOW_PASSWORD = "Secr3tP4ssw0rd"
-
-SNOW_TIMEOUT = 120
-SNOW_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
-SNOW_URL = "https://" + SNOW_INSTANCE + ".service-now.com/api/now/"
+sNowServer = "dev123456.service-now.com/"
+sNowUser = "admin"
+sNowPass = "Secr3tP4ssw0rd"
 
 # IP Fabric variables
-IPF_URL = "https://ipfabric.server"
-IPF_TOKEN = "token"
-IPF_SNAPSHOT = ""
-IPF_SSL = True  # SSL Verification
+IPFServer = "https://ipfabric-server"
+IPFToken = "74cd548bf79f8782751e87f49008de4b"
+working_snapshot = ""
+IPFVerify = True  # SSL Verification
 
+'''
+##### TESTS #####################################
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+IPFToken = os.getenv("IPFToken")
+IPFServer = os.getenv("IPFServer")
+IPFVerify = False
+#'''
+"""
+sNowServer = os.getenv("sNowServer")
+sNowUser = os.getenv("sNowUser")
+sNowPass = os.getenv("sNowPass")
+source_file = open("l66-test-sitesep.csv")
+generate_only = False
+servicenow=False
+upper_match=False
+exact_match=False
+grex=False
+reg_out=False
+keep_rules=False
+##### END OF TESTS ##############################
+#"""
 
 
 def main(
@@ -134,23 +155,23 @@ def main(
             sys.exit(
                 "##INFO## Generate ONLY - you've specified the source file. Nothing to do in this case. Bye Bye!"
             )
-    
-    print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
-    ipf = IPFClient(
-        base_url=IPF_URL,
-        token=IPF_TOKEN,
-        snapshot_id=IPF_SNAPSHOT,
-        verify=IPF_SSL,
-    )
-    devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
-    
-    # servicenow: we will collect the data from SNow and create the file
+
+    # otherwise we will collect the data from SNow and create the file
     if servicenow:
-        snow_api = httpx.Client(base_url=SNOW_URL, auth=(SNOW_USER, SNOW_PASSWORD), headers=SNOW_HEADERS, timeout=SNOW_TIMEOUT)
+        print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
+        ipf = IPFClient(
+            base_url=IPFServer,
+            token=IPFToken,
+            snapshot_id=working_snapshot,
+            verify=IPFVerify,
+        )
+        devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
             f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
-        locations_settings = fetchSNowDevicesLoc(snow_api, devDeets)
+        locations_settings = fetchSNowDevicesLoc(
+            sNowServer, sNowUser, sNowPass, devDeets
+        )
         # Ouput file name will either be the one given as a source, or auto generated.
         output_file = "".join(
             ["snow_location-", datetime.now().strftime("%Y%m%d-%H%M"), ".json"]
@@ -166,6 +187,17 @@ def main(
 
     # now we are going to get ready to update IP Fabric
     if locations_settings != {}:
+        # We create the ipf client if it hasn't been created before
+        try:
+            ipf, devDeets
+        except NameError:
+            ipf = IPFClient(
+                base_url=IPFServer,
+                token=IPFToken,
+                snapshot_id=working_snapshot,
+                verify=IPFVerify,
+            )
+            devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         # Site Separation using RULES - not the recommended way
         if upper_match or exact_match or grex:
             print(
@@ -183,7 +215,7 @@ def main(
                     print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
                 # We can now push this into IP Fabric
-                if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
+                if str(ipf.os_version)[:3] in ["4.0", "4.1", "4.2"]:
                     updateSnapshotSettings(
                         ipf,
                         optimised_locations_settings,
@@ -192,7 +224,6 @@ def main(
                         keep_rules,
                     )
                 else:
-                    #print("##ERR## this option is not yet supported on v4.3+")
                     updateSnapshotSettings_v4_3(
                         ipf,
                         optimised_locations_settings,
@@ -202,12 +233,12 @@ def main(
                     )
             else:
                 sys.exit(
-                    "##INFO## Run the script without the -u or -e or -grex options. Use -f or -snow instead."
+                    "##INFO## Run the script without the -u or -e or -grex options"
                 )
 
         # Site Separation using Manual Site Separation - the recommended way
         else:
-            if ipf.os_version[:3] in ["3.8", "4.0", "4.1", "4.2"]:
+            if str(ipf.os_version)[:3] in ["3.8", "4.0", "4.1", "4.2"]:
                 # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
                 list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
 
@@ -306,7 +337,7 @@ Recommended option will use Manual Site Separation. There is also an option to u
         dest="keep_rules",
         action="store_true",
         default=False,
-        help="(Rules creation) use this option if you want to KEEP existing rules: add new rules on top of the existing ones from the latest or IPF_SNAPSHOT **NOT RECOMMENDED**",
+        help="(Rules creation) use this option if you want to KEEP existing rules: add new rules on top of the existing ones from the latest or working_snapshot **NOT RECOMMENDED**",
     )
 
     args = parser.parse_args()
