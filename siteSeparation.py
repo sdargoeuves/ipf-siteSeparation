@@ -1,4 +1,8 @@
 """
+Version 1.5.0 - 2022/07/20
+Support for version 5.0 has been added.
+YOU NEED to use the ipfabric python sdk matching your IP Fabric version
+
 Version 1.4.0 - 2022/05/22
 Rules creation is now allowed for version v4.3+ but /!\ NOT RECOMMENDED /!\ 
 
@@ -70,12 +74,12 @@ sNowUser = "admin"
 sNowPass = "Secr3tP4ssw0rd"
 
 # IP Fabric variables
-IPFServer = "https://ipfabric.server"
-IPFToken = "token"
+IPFServer = "https://ipfabric-server"
+IPFToken = "74cd548bf79f8782751e87f49008de4b"
 working_snapshot = ""
 IPFVerify = True  # SSL Verification
 
-#'''
+'''
 ##### TESTS #####################################
 from dotenv import load_dotenv
 import os
@@ -199,7 +203,7 @@ def main(
             print(
                 f"##WARNING## You are about to create rules for Site Separation. We strongly recommend using 'Device Attributes' instead...\t\t"
             )
-            confirm = input(f"----> Are you sure you want to proceed? y/[n]: ")
+            confirm = input(f"----> Are you sure you want to proceed (y/[n])? ")
             if confirm.lower() == "y":
                 # Before pushing the data to IP Fabric we want to optimise the rules
                 optimised_locations_settings = regexOptimisation(
@@ -211,7 +215,7 @@ def main(
                     print(f"##INFO## Uppercase Regex rules will be created\t\t")
 
                 # We can now push this into IP Fabric
-                if ipf.os_version[:3] in ["4.0", "4.1", "4.2"]:
+                if str(ipf.os_version)[:3] in ["4.0", "4.1", "4.2"]:
                     updateSnapshotSettings(
                         ipf,
                         optimised_locations_settings,
@@ -220,7 +224,6 @@ def main(
                         keep_rules,
                     )
                 else:
-                    print("##ERR## this option is not yet supported on v4.3+")
                     updateSnapshotSettings_v4_3(
                         ipf,
                         optimised_locations_settings,
@@ -235,7 +238,7 @@ def main(
 
         # Site Separation using Manual Site Separation - the recommended way
         else:
-            if ipf.os_version[:3] in ["3.8", "4.0", "4.1", "4.2"]:
+            if str(ipf.os_version)[:3] in ["3.8", "4.0", "4.1", "4.2"]:
                 # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
                 list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
 

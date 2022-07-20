@@ -16,8 +16,9 @@ def readInput(source_file):
         try:
             if not df_input.empty:
                 new_headers = ["hostname", "location"]
-                for i in range(0, len(df_input.columns) - 2):
-                    new_headers.append(i)
+                #for i in range(0, len(df_input.columns) - 2):
+                #    new_headers.append(i)
+                df_input.drop(df_input.columns[2:], axis=1, inplace=True)
                 df_input.columns = new_headers
                 # we need to ensure the DF contains string, not numbers
                 df_input = df_input.applymap(str)
