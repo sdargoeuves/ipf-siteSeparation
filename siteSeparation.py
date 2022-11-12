@@ -137,8 +137,9 @@ def main(
     # At least -f or -sn should have been used:
     if source_file is None and not servicenow:
         sys.exit(
-            f"##ERROR## You need to specify EITHER the source file, or ServiceNow as the input"
+            "##ERROR## You need to specify EITHER the source file, or ServiceNow as the input"
         )
+
     locations_settings = {}
     # if a source_file was entered as an input, we will read the file
     if source_file is not None:
@@ -149,8 +150,9 @@ def main(
             print(f"##ERROR## Type of error: {type(exc)}")
             print(f"##ERROR## Message: {exc.args}")
             sys.exit(
-                f"##ERROR## Error while reading the file. Couldn't load the data into a dictionnary"
+                "##ERROR## Error while reading the file. Couldn't load the data into a dictionnary"
             )
+
         if generate_only:
             sys.exit(
                 "##INFO## Generate ONLY - you've specified the source file. Nothing to do in this case. Bye Bye!"
@@ -158,7 +160,7 @@ def main(
 
     # otherwise we will collect the data from SNow and create the file
     if servicenow:
-        print(f"##INFO## Connecting to IP Fabric to collect the list of devices")
+        print("##INFO## Connecting to IP Fabric to collect the list of devices")
         ipf = IPFClient(
             base_url=IPFServer,
             token=IPFToken,
@@ -167,8 +169,9 @@ def main(
         )
         devDeets = ipf.inventory.devices.all(columns=inventory_devices_columns)
         print(
-            f"##INFO## now let's go to SNow to generate the JSON file with hostname/location"
+            "##INFO## now let's go to SNow to generate the JSON file with hostname/location"
         )
+
         locations_settings = fetchSNowDevicesLoc(
             sNowServer, sNowUser, sNowPass, devDeets
         )
@@ -203,7 +206,7 @@ def main(
             print(
                 f"##WARNING## You are about to create rules for Site Separation. We strongly recommend using 'Device Attributes' instead...\t\t"
             )
-            confirm = input(f"----> Are you sure you want to proceed (y/[n])? ")
+            confirm = input("----> Are you sure you want to proceed (y/[n])? ")
             if confirm.lower() == "y":
                 # Before pushing the data to IP Fabric we want to optimise the rules
                 optimised_locations_settings = regexOptimisation(
@@ -236,29 +239,27 @@ def main(
                     "##INFO## Run the script without the -u or -e or -grex options"
                 )
 
-        # Site Separation using Manual Site Separation - the recommended way
+        elif str(ipf.os_version)[:3] in ["3.8", "4.0", "4.1", "4.2"]:
+            # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
+            list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
+
+            # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+            list_devices_sites_to_push = getDevicesSnSiteId(
+                devDeets, list_devices_sitesID
+            )
+
+            # Finally we update the settings of the manual site separation
+            updateManualSiteSeparation(ipf, list_devices_sites_to_push)
+            # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+
         else:
-            if str(ipf.os_version)[:3] in ["3.8", "4.0", "4.1", "4.2"]:
-                # We now need to check the list of new sites, match them and create them in IP Fabric if they don't exist
-                list_devices_sitesID = getSiteId(ipf, locations_settings, CATCH_ALL)
-
-                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
-                list_devices_sites_to_push = getDevicesSnSiteId(
-                    devDeets, list_devices_sitesID
-                )
-
-                # Finally we update the settings of the manual site separation
-                updateManualSiteSeparation(ipf, list_devices_sites_to_push)
-                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
-
-            else:
-                # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
-                list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
-                    devDeets, locations_settings, CATCH_ALL
-                )
-                # Finally we update the settings of the manual site separation
-                updateAttribute_v4_3(ipf, list_devices_sites_to_push)
-                # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
+            # We create the list to push via Manual Site separation. It needs the SN of the devices, and the ID of the site
+            list_devices_sites_to_push = getDevicesSnSiteId_v4_3(
+                devDeets, locations_settings, CATCH_ALL
+            )
+            # Finally we update the settings of the manual site separation
+            updateAttribute_v4_3(ipf, list_devices_sites_to_push)
+            # updateSnapshotSettings(ipf, locations_settings, "0ab031b1-19ba-44dd-b708-4185bd01c819", exact_match)
     print("##INFO## End of the script. Bye Bye!")
 
 

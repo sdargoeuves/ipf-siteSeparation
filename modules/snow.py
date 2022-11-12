@@ -29,8 +29,8 @@ def fetchLocationName(sNowDevice, sNowLocations):
     location_name = "Location not set in SNOW"
     try:
         device_loc_raw = dict(sNowDevice["location"])
+        device_loc_id = device_loc_raw.get("value", "")
         for location in sNowLocations:
-            device_loc_id = device_loc_raw.get("value", "")
             if location["sys_id"] == device_loc_id:
                 location_name = location["name"]
                 break
@@ -58,7 +58,7 @@ def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
         print(f"##WARNING## Message: {exc.args}")
         print("##WARNING## Can't process SNow data (server hibernation...)")
 
-    print(f"##INFO## Looking for Device's location...")
+    print("##INFO## Looking for Device's location...")
     for dev in ipfDevs:
         try:
             device_sys_id = ""

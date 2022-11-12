@@ -32,13 +32,13 @@ def updateManualSiteSeparation(ipf: IPFClient, list_devicesSn_sitesId: List):
         # Now we change the sitespearation settings to manual
         url_site_sep_settings = "settings"
         site_sep_settings = {"siteTypeCalc": "manual"}
-        print(f"##INFO## Changing settings to use Manual Site Separation...")
+        print("##INFO## Changing settings to use Manual Site Separation...")
         push_site_settings = ipf.patch(
             url=url_site_sep_settings, json=site_sep_settings, timeout=120
         )
         push_site_settings.raise_for_status()
         if not push_site_settings.is_error:
-            print(f"##INFO## Site separation has been udpated!")
+            print("##INFO## Site separation has been udpated!")
         else:
             print(
                 f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
@@ -76,7 +76,7 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         payload_global = {
             "attributes": json_devicesSn_sitesId,
         }
-        print(f"##INFO## ... and now the Global Attribute table...")
+        print("##INFO## ... and now the Global Attribute table...")
         push_attributes = ipf.put(
             url=url_global_attribute, json=payload_global, timeout=120
         )
@@ -85,8 +85,9 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         # Now we change the Global settings to take into account the attribute / manual site sep
         url_site_sep_settings = "settings/site-separation"
         print(
-            f"##INFO## Changing Global settings to use Manual Site Separation / Attribute..."
+            "##INFO## Changing Global settings to use Manual Site Separation / Attribute..."
         )
+
         get_site_settings = ipf.get(url=url_site_sep_settings)
         if get_site_settings.status_code == 200:
             site_sep_settings = {
@@ -106,8 +107,9 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         # and we change the local settings (snpashot) to take into account the attriebute / manual site sep
         url_site_sep_settings_snapshot = "snapshots/" + ipf.snapshot_id + "/settings"
         print(
-            f"##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute..."
+            "##INFO## Changing Snapshot settings to use Manual Site Separation / Attribute..."
         )
+
         get_site_settings_snapshot = ipf.get(url=url_site_sep_settings_snapshot)
         site_sep_settings_snapshot = {
             "siteSeparation": {
@@ -123,7 +125,7 @@ def updateAttribute_v4_3(ipf: IPFClient, list_devicesSn_siteName: List):
         )
 
         if not push_site_settings.is_error:
-            print(f"##INFO## Site separation has been udpated!")
+            print("##INFO## Site separation has been udpated!")
         else:
             print(
                 f"##WARNING## Settings for using Attributes have not been updated... return code: {push_site_settings.status_code}"
@@ -174,8 +176,9 @@ def getSiteId(ipf: IPFClient, locations_settings, catch_all):
         print(f"##ERROR## Type of error: {type(exc)}")
         print(f"##ERROR## Message: {exc.args}")
         sys.exit(
-            f"##ERROR## EXIT -> Optimization Failure - could not load the JSON into a DataFrame"
+            "##ERROR## EXIT -> Optimization Failure - could not load the JSON into a DataFrame"
         )
+
 
     # Sort by location first, then by hostname - is it useful?
     # df_sorted = df_locations_settings.sort_values(by=["siteName", "hostname"], ignore_index=True)
