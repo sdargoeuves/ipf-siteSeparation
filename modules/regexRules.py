@@ -47,9 +47,9 @@ def regexOptimisation(locations_settings, grex=False, max_devices_per_rule=20):
     optimised_regex_list = []
     site_dict = {}
     if grex == True:
-        print(f"##INFO## Rules created will using regex generated using 'grex'")
+        print("##INFO## Rules created will using regex generated using 'grex'")
     else:
-        print(f"##INFO## Rules created will use the hostname")
+        print("##INFO## Rules created will use the hostname")
     # load the json into a DataFrame
     try:
         df = pd.json_normalize(locations_settings)
@@ -57,8 +57,9 @@ def regexOptimisation(locations_settings, grex=False, max_devices_per_rule=20):
         print(f"##ERROR## Type of error: {type(exc)}")
         print(f"##ERROR## Message: {exc.args}")
         sys.exit(
-            f"##ERROR## EXIT -> Optimization Failure - could not load the JSON into a DataFrame"
+            "##ERROR## EXIT -> Optimization Failure - could not load the JSON into a DataFrame"
         )
+
 
     # Sort by location first, then by hostname
     try:
@@ -67,8 +68,9 @@ def regexOptimisation(locations_settings, grex=False, max_devices_per_rule=20):
         print(f"##ERROR## Type of error: {type(exc)}")
         print(f"##ERROR## Message: {exc.args}")
         sys.exit(
-            f"##ERROR## EXIT -> Optimization Failure - could not sort the DataFrame based on location/hostname. Check the source file."
+            "##ERROR## EXIT -> Optimization Failure - could not sort the DataFrame based on location/hostname. Check the source file."
         )
+
     counter_device_per_rule = 0
     list_hostnames = ""
     prev_location = ""
@@ -206,10 +208,8 @@ def updateSnapshotSettings(
         # if there are previous rules, we won't need to add the the catch all at the end
         if previous_rules != []:
             create_catch_all_rule = False
-            rule_id = 0
-            for rule in new_settings["siteSeparation"]:
+            for rule_id, rule in enumerate(new_settings["siteSeparation"]):
                 previous_rules.insert(rule_id, rule)
-                rule_id += 1
             new_settings["siteSeparation"] = previous_rules
 
     # last entry will be a "Catch all rule", only if we are deleting the existing rules
@@ -248,18 +248,18 @@ def updateSnapshotSettings(
             print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
             print("  TIP: An empty value in the CSV could cause this issue")
         else:
-            print(f"  --> SUCCESSFULLY Patched global settings")
+            print("  --> SUCCESSFULLY Patched global settings")
 
             # Once done, we need to update the Site Separation settings to ensure we will use USer Rules from this point
             url_site_sep_settings = "settings"
             site_sep_settings = {"siteTypeCalc": "rules"}
-            print(f"##INFO## Changing settings to use Rules Site Separation...")
+            print("##INFO## Changing settings to use Rules Site Separation...")
             push_site_settings = ipf.patch(
                 url=url_site_sep_settings, json=site_sep_settings, timeout=120
             )
             push_site_settings.raise_for_status()
             if not push_site_settings.is_error:
-                print(f"##INFO## Site separation has been udpated!")
+                print("##INFO## Site separation has been udpated!")
             else:
                 print(
                     f"##WARNING## Settings for site separation have not been updated... return code: {push_site_settings.status_code}"
@@ -353,10 +353,8 @@ def updateSnapshotSettings_v4_3(
         # if there are previous rules, we won't need to add the the catch all at the end
         if previous_rules != []:
             create_catch_all_rule = False
-            rule_position = 0
-            for rule in new_settings["siteSeparation"]["rules"]:
+            for rule_position, rule in enumerate(new_settings["siteSeparation"]["rules"]):
                 previous_rules["rules"].insert(rule_position, rule)
-                rule_position += 1
             new_settings["siteSeparation"] = previous_rules
 
     # last entry will be a "Catch all rule", only if we are deleting the existing rules
@@ -385,7 +383,7 @@ def updateSnapshotSettings_v4_3(
         print("  MESSAGE: ", pushGlobalSettings.reason_phrase)
         print("  TIP: An empty value in the CSV could cause this issue")
     else:
-        print(f"  --> SUCCESSFULLY Patched global settings")
+        print("  --> SUCCESSFULLY Patched global settings")
 
         # We also need to update the site separation rules for that snapshot
         snapSettingsEndpoint = "/snapshots/" + ipf.snapshot_id + "/settings"
