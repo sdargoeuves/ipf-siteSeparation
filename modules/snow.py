@@ -69,7 +69,7 @@ def fetchSNowDevicesLoc(snow_api: httpx.Client, ipfDevs):
                     break
             if device_sys_id == "":
                 device_loc = "Device not found in SNOW"
-        except:
+        except Exception:
             device_loc = "ERR - Not in SNOW"
 
         devices_loc.append(

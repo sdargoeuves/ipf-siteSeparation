@@ -74,10 +74,10 @@ sNowUser = "admin"
 sNowPass = "Secr3tP4ssw0rd"
 
 # IP Fabric variables
-IPFServer = "https://ipfabric-server"
-IPFToken = "74cd548bf79f8782751e87f49008de4b"
+IPFServer = "https://192.168.0.103"
+IPFToken = "53e3d237af85bc717991d7cb50d93113"
 working_snapshot = ""
-IPFVerify = True  # SSL Verification
+IPFVerify = False  # SSL Verification
 
 '''
 ##### TESTS #####################################
