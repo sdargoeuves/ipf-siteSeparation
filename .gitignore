@@ -1,6 +1,10 @@
+# files to keep
+! example.*
+
 #files to ignore
-mipfcraft-hetzner-tokens.json
-logs/*
+*.json
+*.csv
+*.xls
 
 
 # Byte-compiled / optimized / DLL files
