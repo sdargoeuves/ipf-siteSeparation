@@ -6,6 +6,7 @@ To do so, the script will use **Manual Site Separation**.
 Since IP Fabric v4.3, the manual site separation is using **Device Attributes**.
 The script will update the relevant settings depending on your version.
 >With IP Fabric >=4.3, rules creation is still available, but not recommended.
+(tested on v6.3.0)
 
 ## How to install
 
