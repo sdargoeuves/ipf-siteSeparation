@@ -29,7 +29,7 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     snow_ok = True
     devices_loc = []
     devicesEndpoint = (
-        "https://" + sNowServer + "/api/now/v1/cmdb/instance/cmdb_ci_netgear"
+        f"https://{sNowServer}/api/now/v1/cmdb/instance/cmdb_ci_netgear"
     )
     sNowHeaders = {
         "Connection": "keep-alive",
@@ -50,13 +50,16 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
     for dev in ipfDevs:
         # get device sys_id
         try:
-            device_sys = ""
-            for sys in sNowDevices:
-                if dev["hostname"] == sys["name"]:
-                    device_sys = sys["sys_id"]
-                    break
+            device_sys = next(
+                (
+                    sys["sys_id"]
+                    for sys in sNowDevices
+                    if dev["hostname"] == sys["name"]
+                ),
+                "",
+            )
             # query the API for that device, and extract the location
-            deviceEndpoint = devicesEndpoint + "/" + device_sys
+            deviceEndpoint = f"{devicesEndpoint}/{device_sys}"
             sNowDevice = httpx.get(
                 deviceEndpoint,
                 auth=(sNowUser, sNowPass),
@@ -84,7 +87,7 @@ def fetchSNowDevicesLoc(sNowServer, sNowUser, sNowPass, ipfDevs):
             }
         )
     if snow_ok:
-        print(f"##INFO## info on IPF devices collected from SNow")
+        print("##INFO## info on IPF devices collected from SNow")
     else:
-        print(f"##WARNING## Issue with the collection from SNow")
+        print("##WARNING## Issue with the collection from SNow")
     return devices_loc
